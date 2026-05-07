@@ -82,6 +82,7 @@ export class LocalSimulation {
   }
 
   spawnFood(x, y) {
+    if (this.foods.length >= CFG.FOOD_MAX) return null;
     this.foods.push(new Food({
       x,
       y,
@@ -89,6 +90,7 @@ export class LocalSimulation {
       layerFood: this.renderContext.layers.food,
       textures: this.renderContext.textures,
     }));
+    return this.foods[this.foods.length - 1];
   }
 
   spawnStar() {
@@ -121,6 +123,10 @@ export class LocalSimulation {
       const seg = snake.segs[segIndex];
       this.spawnFood(seg.x + (Math.random() * 12 - 6), seg.y + (Math.random() * 12 - 6));
     }
+  }
+
+  isHeadOnCollision(snake, killer) {
+    return Boolean(killer?.head && dist(snake.head.x, snake.head.y, killer.head.x, killer.head.y) < CFG.SR * 2.8);
   }
 
   eatFoods() {
@@ -158,10 +164,20 @@ export class LocalSimulation {
   die(snake, killer) {
     if (snake.dead) return;
 
+    const headOn = this.isHeadOnCollision(snake, killer);
     snake.dead = true;
     snake.boosting = false;
+    if (snake.body?.setVisible) snake.body.setVisible(false);
     this.effects.spawnDeathFragments(snake);
     this.effects.burst(snake.head.x, snake.head.y, hslHex(snake.skin.hue, 100, 62), 24, 5.5, 15, 5.5);
+    if (headOn) {
+      const midX = (snake.head.x + killer.head.x) / 2;
+      const midY = (snake.head.y + killer.head.y) / 2;
+      this.effects.collisionBurst(midX, midY, hslHex(snake.skin.hue, 100, 68));
+      this.effects.collisionBurst(snake.head.x, snake.head.y, 0xfff1c2);
+      this.effects.collisionBurst(killer.head.x, killer.head.y, 0xfff1c2);
+      this.events.onFlash("rgba(255,241,194,0.18)");
+    }
     this.spawnDeathFoodTrail(snake);
 
     if (snake === this.player) {

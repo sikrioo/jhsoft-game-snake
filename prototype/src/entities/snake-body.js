@@ -1,6 +1,18 @@
 import { CFG } from "../config/game-config.js";
 import { hslHex } from "../core/utils.js";
 
+function getSegmentColor(snake, bodyIndex, bodyCount, buffed) {
+  if (buffed) return hslHex(45, snake.isPlayer ? 82 : 68, snake.isPlayer ? 42 + (bodyIndex / Math.max(1, bodyCount - 1)) * 20 : 32 + (bodyIndex / Math.max(1, bodyCount - 1)) * 18);
+
+  if (snake.skin.pattern === "rainbow") {
+    const wave = (Date.now() * 0.08 + bodyIndex * 18) % 360;
+    return hslHex(wave, snake.isPlayer ? 88 : 72, snake.isPlayer ? 52 : 46);
+  }
+
+  const t = bodyIndex / Math.max(1, bodyCount - 1);
+  return hslHex(snake.skin.hue, snake.isPlayer ? 82 : 68, snake.isPlayer ? 42 + t * 20 : 32 + t * 18);
+}
+
 export class SnakeBody {
   constructor(snake, { layers, textures }) {
     this.snake = snake;
@@ -39,13 +51,19 @@ export class SnakeBody {
     for (let i = count; i < this.sprites.length; i++) this.sprites[i].visible = false;
   }
 
+  setVisible(visible) {
+    if (!this.enabled) return;
+    for (const sprite of this.sprites) sprite.visible = visible;
+    if (this.nameText) this.nameText.visible = visible;
+  }
+
   update() {
     if (!this.enabled) return;
+    this.setVisible(true);
     const segs = this.snake.segs;
     const bodyCount = segs.length - 1;
     this.sync(bodyCount);
     const buffed = this.snake.speedBuff > 0;
-    const hue = buffed ? 45 : this.snake.skin.hue;
 
     for (let i = 0; i < bodyCount; i++) {
       const segIdx = segs.length - 1 - i;
@@ -55,7 +73,7 @@ export class SnakeBody {
       sprite.visible = true;
       sprite.position.set(seg.x, seg.y);
       sprite.scale.set(0.68 + 0.32 * t);
-      sprite.tint = hslHex(hue, this.snake.isPlayer ? 82 : 68, this.snake.isPlayer ? 42 + t * 20 : 32 + t * 18);
+      sprite.tint = getSegmentColor(this.snake, i, bodyCount, buffed);
       sprite.alpha = 0.6 + t * 0.3;
     }
 

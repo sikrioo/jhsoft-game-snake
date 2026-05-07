@@ -43,6 +43,7 @@ class FoodReplica {
 
 class SnakeReplica {
   constructor(snapshot, renderContext) {
+    this.renderContext = renderContext;
     this.id = snapshot.id;
     this.name = snapshot.name;
     this.skin = snapshot.skin;
@@ -56,6 +57,7 @@ class SnakeReplica {
     this.targetSegs = snapshot.segs.map((seg) => ({ ...seg }));
     this.showNameTag = true;
     this.body = new SnakeBody(this, renderContext);
+    if (this.dead && this.body?.setVisible) this.body.setVisible(false);
   }
 
   get head() {
@@ -67,6 +69,7 @@ class SnakeReplica {
   }
 
   updateFromSnapshot(snapshot) {
+    const wasDead = this.dead;
     this.name = snapshot.name;
     this.skin = snapshot.skin;
     this.isPlayer = snapshot.isPlayer;
@@ -79,6 +82,13 @@ class SnakeReplica {
       this.targetSegs = snapshot.segs.map((seg) => ({ ...seg }));
     } else {
       this.targetSegs = snapshot.segs.map((seg) => ({ ...seg }));
+    }
+
+    if (!wasDead && this.dead && this.body?.setVisible) {
+      this.body.setVisible(false);
+    }
+    if (wasDead && !this.dead && this.body?.setVisible) {
+      this.body.setVisible(true);
     }
   }
 

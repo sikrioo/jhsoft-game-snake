@@ -2,13 +2,18 @@ import { hslHex } from "../core/utils.js";
 
 export function drawHeads(headLayer, snakeList, segmentRadius) {
   headLayer.clear();
+  const now = Date.now();
 
   for (const snake of snakeList) {
     if (snake.dead || snake.segs.length < 1) continue;
 
     const segs = snake.segs;
     const buffed = snake.speedBuff > 0;
-    const hue = buffed ? 45 : snake.skin.hue;
+    const hue = buffed
+      ? 45
+      : snake.skin.pattern === "rainbow"
+        ? (now * 0.12) % 360
+        : snake.skin.hue;
     const hx = segs[0].x;
     const hy = segs[0].y;
     const r = segmentRadius;

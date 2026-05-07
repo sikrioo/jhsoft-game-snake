@@ -26,7 +26,7 @@ export class OnlineSession {
         onSnakeDeath: (snake) => {
           if (snake.id === this.selfId) return;
           this.effects.spawnDeathFragments(snake);
-          this.effects.burst(snake.head.x, snake.head.y, 0xffffff, 18, 5.5, 40, 4.5);
+          this.effects.collisionBurst(snake.head.x, snake.head.y, 0xfff1c2);
         },
       }
     );

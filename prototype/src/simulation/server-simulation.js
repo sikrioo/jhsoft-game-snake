@@ -1,7 +1,7 @@
 import { CFG } from "../config/game-config.js";
 import { SKINS } from "../config/skins.js";
 import { Grid } from "../core/grid.js";
-import { dist, hslHex } from "../core/utils.js";
+import { dist, hslHex, rnd } from "../core/utils.js";
 import { Bot } from "../entities/bot.js";
 import { Food } from "../entities/food.js";
 import { Snake } from "../entities/snake.js";
@@ -11,6 +11,8 @@ import { EffectsSystem } from "../systems/effects-system.js";
 function findSkinById(skinId) {
   return SKINS.find((skin) => skin.id === skinId) || SKINS[0];
 }
+
+const SPAWN_PROTECTION_TICKS = 45;
 
 export class ServerSimulation {
   constructor() {
@@ -59,10 +61,51 @@ export class ServerSimulation {
     this.refill();
   }
 
+  getBlockingSnakes(excludeSnake = null) {
+    const snakes = [
+      ...[...this.players.values()].map((player) => player.snake),
+      ...this.bots,
+    ];
+    return snakes.filter((snake) => snake && !snake.dead && snake !== excludeSnake);
+  }
+
+  evaluateSpawnCandidate(x, y, excludeSnake = null) {
+    const boundaryClearance = CFG.WR - Math.hypot(x, y);
+    let minDist = boundaryClearance;
+
+    for (const snake of this.getBlockingSnakes(excludeSnake)) {
+      minDist = Math.min(minDist, dist(x, y, snake.head.x, snake.head.y));
+      for (let i = 0; i < snake.segs.length; i += 2) {
+        minDist = Math.min(minDist, dist(x, y, snake.segs[i].x, snake.segs[i].y));
+      }
+    }
+
+    return minDist;
+  }
+
+  findSafeSpawnPosition(excludeSnake = null) {
+    let best = { x: 0, y: 0, score: -Infinity };
+    const targetClearance = CFG.SR * 24;
+
+    for (let i = 0; i < 140; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const radius = rnd(180, CFG.WR - 260);
+      const x = Math.cos(angle) * radius;
+      const y = Math.sin(angle) * radius;
+      const score = this.evaluateSpawnCandidate(x, y, excludeSnake);
+
+      if (score > best.score) best = { x, y, score };
+      if (score >= targetClearance) return { x, y };
+    }
+
+    return { x: best.x, y: best.y };
+  }
+
   addPlayer(id, { name, skinId }) {
+    const spawn = this.findSafeSpawnPosition();
     const snake = new Snake({
-      x: 0,
-      y: 0,
+      x: spawn.x,
+      y: spawn.y,
       len: 22,
       skin: findSkinById(skinId),
       name: name || `P-${id.slice(0, 4)}`,
@@ -84,6 +127,7 @@ export class ServerSimulation {
       boostDT: 0,
       prevBoost: false,
       respawnTicks: 0,
+      spawnProtectionTicks: SPAWN_PROTECTION_TICKS,
     });
   }
 
@@ -96,9 +140,10 @@ export class ServerSimulation {
 
   respawnPlayer(player) {
     if (player.snake) player.snake.destroy();
+    const spawn = this.findSafeSpawnPosition(player.snake);
     player.snake = new Snake({
-      x: 0,
-      y: 0,
+      x: spawn.x,
+      y: spawn.y,
       len: 22,
       skin: findSkinById(player.skinId),
       name: player.name,
@@ -111,6 +156,8 @@ export class ServerSimulation {
     player.boostDT = 0;
     player.prevBoost = false;
     player.respawnTicks = 0;
+    player.spawnProtectionTicks = SPAWN_PROTECTION_TICKS;
+    player.input = createPlayerCommand();
   }
 
   setPlayerInput(id, input) {
@@ -120,6 +167,7 @@ export class ServerSimulation {
   }
 
   spawnFood(x, y) {
+    if (this.foods.length >= CFG.FOOD_MAX) return null;
     const food = new Food({
       x,
       y,
@@ -129,6 +177,7 @@ export class ServerSimulation {
     });
     food.netId = this.createEntityId("food");
     this.foods.push(food);
+    return food;
   }
 
   spawnStar() {
@@ -163,6 +212,10 @@ export class ServerSimulation {
       const seg = snake.segs[segIndex];
       this.spawnFood(seg.x + (Math.random() * 12 - 6), seg.y + (Math.random() * 12 - 6));
     }
+  }
+
+  isHeadOnCollision(snake, killerSnake) {
+    return Boolean(killerSnake?.head && dist(snake.head.x, snake.head.y, killerSnake.head.x, killerSnake.head.y) < CFG.SR * 2.8);
   }
 
   getLivingPlayerStates() {
@@ -202,10 +255,19 @@ export class ServerSimulation {
   dieSnake(snake, killerSnake) {
     if (snake.dead) return;
 
+    const headOn = this.isHeadOnCollision(snake, killerSnake);
     snake.dead = true;
     snake.boosting = false;
+    if (snake.body?.setVisible) snake.body.setVisible(false);
     this.effects.spawnDeathFragments(snake);
     this.effects.burst(snake.head.x, snake.head.y, hslHex(snake.skin.hue, 100, 62), 24, 5.5, 15, 5.5);
+    if (headOn) {
+      const midX = (snake.head.x + killerSnake.head.x) / 2;
+      const midY = (snake.head.y + killerSnake.head.y) / 2;
+      this.effects.collisionBurst(midX, midY, hslHex(snake.skin.hue, 100, 68));
+      this.effects.collisionBurst(snake.head.x, snake.head.y, 0xfff1c2);
+      this.effects.collisionBurst(killerSnake.head.x, killerSnake.head.y, 0xfff1c2);
+    }
     this.spawnDeathFoodTrail(snake);
 
     const player = [...this.players.values()].find((entry) => entry.snake === snake);
@@ -245,6 +307,8 @@ export class ServerSimulation {
         }
         continue;
       }
+
+      if (player.spawnProtectionTicks > 0) player.spawnProtectionTicks--;
 
       snake.steer(player.input.targetAngle, 0.1);
       const wantBoost = player.input.boosting && player.boostE > 0 && snake.len > CFG.MIN_LEN && snake.speedBuff === 0;
@@ -308,12 +372,20 @@ export class ServerSimulation {
   }
 
   checkCollisions() {
+    const protectedSnakes = new Set(
+      [...this.players.values()]
+        .filter((player) => player.spawnProtectionTicks > 0)
+        .map((player) => player.snake)
+        .filter(Boolean)
+    );
     const allSnakes = [...this.players.values()].map((player) => player.snake).concat(this.bots);
     for (const snake of allSnakes) {
       if (!snake || snake.dead) continue;
+      if (protectedSnakes.has(snake)) continue;
       const nearbySegments = this.segmentsGrid.near(snake.head.x, snake.head.y, CFG.SR * 5);
       for (const { seg, own } of nearbySegments) {
         if (own === snake) continue;
+        if (protectedSnakes.has(own)) continue;
         if (dist(snake.head.x, snake.head.y, seg.x, seg.y) < CFG.SR * 2) {
           this.dieSnake(snake, own);
           break;

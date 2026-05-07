@@ -145,6 +145,11 @@ export class EffectsSystem {
     }
   }
 
+  collisionBurst(x, y, color) {
+    this.burst(x, y, color, 32, 7.5, 18, 6.5);
+    this.burst(x, y, 0xffffff, 18, 5.5, 12, 4.5);
+  }
+
   spawnDeathFragments(snake) {
     const stride = snake.segs.length > 120 ? 3 : snake.segs.length > 60 ? 2 : 1;
     for (let i = 0; i < snake.segs.length; i += stride) {
