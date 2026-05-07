@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SLITHER.EXE</title>
+<link rel="stylesheet" href="./styles/game.css">
+</head>
+<body>
+<div id="cur"></div>
+<div id="vig"></div>
+<div id="flash"></div>
+<div id="mblur"></div>
+<div id="sbuff">SPEED BOOST</div>
+<div id="hud">
+  <div class="hc"><div class="hl">Length</div><div class="hv" id="hLen">0</div></div>
+  <div class="hc" id="bc">
+    <div id="blr"><div class="hl">Boost</div><div id="bpct">100%</div></div>
+    <div id="btrk"><div id="bfil" style="width:100%"></div></div>
+    <div id="sbtrk"><div id="sbfil" style="width:100%"></div></div>
+  </div>
+  <div class="hc"><div class="hl">Score</div><div class="hv" id="hScr">0</div></div>
+</div>
+<div id="lb"><div class="lt">Leaderboard</div><div id="lbr"></div></div>
+<div id="mm"><canvas id="mmc" width="148" height="148"></canvas></div>
+<div id="kf"></div>
+
+<div id="ss" class="scr">
+  <div class="lw"><div class="lgw">SLITHER</div><div class="lg">SLITHER</div></div>
+  <div class="ls">SINGLE PLAYER PROTOTYPE</div>
+  <div class="cg">
+    <span class="ck">MOUSE</span><span>Direction</span>
+    <span class="ck">CLICK / SPACE</span><span>Boost</span>
+    <span class="ck">Q</span><span>Toggle boost</span>
+    <span class="ck" style="color:var(--accent3)">STAR</span><span>Temporary speed buff</span>
+  </div>
+  <div class="skinBox" style="max-width:360px;margin-bottom:18px;">
+    <div class="skinTitle">Nickname</div>
+    <input id="nameInput" type="text" maxlength="16" placeholder="PLAYER" autocomplete="off">
+  </div>
+  <div class="skinBox">
+    <div class="skinTitle">Select Skin</div>
+    <div class="skinGrid" id="skinGrid"></div>
+  </div>
+  <button class="btn" id="startBtn">PLAY</button>
+</div>
+
+<div id="ds" class="scr h">
+  <div class="lw">
+    <div class="lgw" style="color:#ff3c5a">DEAD</div>
+    <div class="lg" style="background:linear-gradient(135deg,#ff3c5a,#ff8060,#ff3c5a);background-size:200%;-webkit-background-clip:text;background-clip:text">DEAD</div>
+  </div>
+  <div class="ls" style="margin-bottom:26px">The snake has been destroyed</div>
+  <div class="sr">
+    <div class="sb"><div class="sv r" id="dLen">0</div><div class="sl">FINAL LENGTH</div></div>
+    <div class="sb"><div class="sv" id="dScr">0</div><div class="sl">SCORE</div></div>
+    <div class="sb"><div class="sv" id="dKil">0</div><div class="sl">KILLS</div></div>
+  </div>
+  <button class="btn" id="retryBtn">RETRY</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/pixi.js@7.4.2/dist/pixi.min.js"></script>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>

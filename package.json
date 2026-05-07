@@ -1,0 +1,17 @@
+{
+  "name": "game.snake",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "server/index.js",
+  "scripts": {
+    "dev": "node server/index.js",
+    "start": "node server/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "Snake prototype with local and online session scaffolding",
+  "dependencies": {
+    "ws": "^8.20.0"
+  }
+}
