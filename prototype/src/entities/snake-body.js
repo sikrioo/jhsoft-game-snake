@@ -1,16 +1,44 @@
 import { CFG } from "../config/game-config.js";
 import { hslHex } from "../core/utils.js";
 
-function getSegmentColor(snake, bodyIndex, bodyCount, buffed) {
-  if (buffed) return hslHex(45, snake.isPlayer ? 82 : 68, snake.isPlayer ? 42 + (bodyIndex / Math.max(1, bodyCount - 1)) * 20 : 32 + (bodyIndex / Math.max(1, bodyCount - 1)) * 18);
+function getSegmentStyle(snake, bodyIndex, bodyCount, buffed) {
+  const t = bodyIndex / Math.max(1, bodyCount - 1);
+  if (buffed) {
+    return {
+      tint: hslHex(45, snake.isPlayer ? 82 : 68, snake.isPlayer ? 42 + t * 20 : 32 + t * 18),
+      alpha: 0.6 + t * 0.3,
+    };
+  }
 
   if (snake.skin.pattern === "rainbow") {
     const wave = (Date.now() * 0.08 + bodyIndex * 18) % 360;
-    return hslHex(wave, snake.isPlayer ? 88 : 72, snake.isPlayer ? 52 : 46);
+    return {
+      tint: hslHex(wave, snake.isPlayer ? 88 : 72, snake.isPlayer ? 52 : 46),
+      alpha: 0.64 + t * 0.28,
+    };
   }
 
-  const t = bodyIndex / Math.max(1, bodyCount - 1);
-  return hslHex(snake.skin.hue, snake.isPlayer ? 82 : 68, snake.isPlayer ? 42 + t * 20 : 32 + t * 18);
+  if (snake.skin.pattern === "ghost") {
+    return {
+      tint: hslHex(188, 44, snake.isPlayer ? 80 + t * 8 : 72 + t * 8),
+      alpha: snake.isPlayer ? 0.32 + t * 0.16 : 0.24 + t * 0.14,
+    };
+  }
+
+  if (snake.skin.pattern === "zebra") {
+    const stripe = bodyIndex % 4;
+    const lightness = stripe < 2 ? (snake.isPlayer ? 92 : 84) : 12;
+    const saturation = stripe < 2 ? 18 : 8;
+    return {
+      tint: hslHex(220, saturation, lightness),
+      alpha: 0.68 + t * 0.2,
+    };
+  }
+
+  return {
+    tint: hslHex(snake.skin.hue, snake.isPlayer ? 82 : 68, snake.isPlayer ? 42 + t * 20 : 32 + t * 18),
+    alpha: 0.6 + t * 0.3,
+  };
 }
 
 export class SnakeBody {
@@ -70,11 +98,12 @@ export class SnakeBody {
       const seg = segs[segIdx];
       const sprite = this.sprites[i];
       const t = i / Math.max(1, bodyCount - 1);
+      const style = getSegmentStyle(this.snake, i, bodyCount, buffed);
       sprite.visible = true;
       sprite.position.set(seg.x, seg.y);
       sprite.scale.set(0.68 + 0.32 * t);
-      sprite.tint = getSegmentColor(this.snake, i, bodyCount, buffed);
-      sprite.alpha = 0.6 + t * 0.3;
+      sprite.tint = style.tint;
+      sprite.alpha = style.alpha;
     }
 
     if (this.nameText) {

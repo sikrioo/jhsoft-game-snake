@@ -13,7 +13,23 @@ export function drawHeads(headLayer, snakeList, segmentRadius) {
       ? 45
       : snake.skin.pattern === "rainbow"
         ? (now * 0.12) % 360
-        : snake.skin.hue;
+        : snake.skin.pattern === "ghost"
+          ? 188
+          : snake.skin.pattern === "zebra"
+            ? 220
+            : snake.skin.hue;
+    const baseLight = snake.skin.pattern === "ghost"
+      ? 86
+      : snake.skin.pattern === "zebra"
+        ? 92
+        : snake.isPlayer ? 63 : 52;
+    const baseSat = snake.skin.pattern === "ghost"
+      ? 38
+      : snake.skin.pattern === "zebra"
+        ? 14
+        : 88;
+    const shadowLight = snake.skin.pattern === "ghost" ? 18 : snake.skin.pattern === "zebra" ? 8 : 10;
+    const headAlpha = snake.skin.pattern === "ghost" ? 0.72 : 1;
     const hx = segs[0].x;
     const hy = segs[0].y;
     const r = segmentRadius;
@@ -29,15 +45,23 @@ export function drawHeads(headLayer, snakeList, segmentRadius) {
       headLayer.lineStyle(0);
     }
 
-    headLayer.beginFill(hslHex(hue, 70, 10), 0.55);
+    headLayer.beginFill(hslHex(hue, snake.skin.pattern === "ghost" ? 24 : 70, shadowLight), snake.skin.pattern === "ghost" ? 0.32 : 0.55);
     headLayer.drawEllipse(hx + 1.5, hy + 1.5, r * 1.7, r * 1.2);
     headLayer.endFill();
 
-    headLayer.beginFill(hslHex(hue, 88, snake.isPlayer ? 63 : 52), 1);
+    headLayer.beginFill(hslHex(hue, baseSat, baseLight), headAlpha);
     headLayer.drawEllipse(hx, hy, r * 1.7, r * 1.2);
     headLayer.endFill();
 
-    headLayer.beginFill(0xffffff, snake.isPlayer ? 0.27 : 0.16);
+    if (snake.skin.pattern === "zebra") {
+      headLayer.beginFill(0x0f1118, 0.92);
+      headLayer.drawEllipse(hx - r * 0.25, hy, r * 0.18, r * 1.05);
+      headLayer.drawEllipse(hx + r * 0.2, hy, r * 0.16, r * 1.02);
+      headLayer.drawEllipse(hx + r * 0.62, hy, r * 0.13, r * 0.94);
+      headLayer.endFill();
+    }
+
+    headLayer.beginFill(0xffffff, snake.skin.pattern === "ghost" ? 0.4 : snake.isPlayer ? 0.27 : 0.16);
     headLayer.drawCircle(hx - r * 0.26, hy - r * 0.28, r * 0.5);
     headLayer.endFill();
 

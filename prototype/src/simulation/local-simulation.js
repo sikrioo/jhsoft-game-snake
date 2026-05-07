@@ -24,7 +24,7 @@ export class LocalSimulation {
     this.effects = new EffectsSystem({
       layerFX: this.renderContext.layers.fx,
       textures: this.renderContext.textures,
-      spawnFood: (x, y) => this.spawnFood(x, y),
+      spawnFood: (x, y, options) => this.spawnFood(x, y, options),
     });
 
     this.runId = 0;
@@ -67,13 +67,13 @@ export class LocalSimulation {
       isPlayer: true,
       showNameTag: true,
       renderContext: this.renderContext,
-      spawnFood: (x, y) => this.spawnFood(x, y),
+      spawnFood: (x, y, options) => this.spawnFood(x, y, options),
     });
 
     for (let i = 0; i < CFG.BOT_N; i++) {
       this.bots.push(new Bot({
         renderContext: this.renderContext,
-        spawnFood: (x, y) => this.spawnFood(x, y),
+        spawnFood: (x, y, options) => this.spawnFood(x, y, options),
       }));
     }
 
@@ -81,8 +81,9 @@ export class LocalSimulation {
     this.state = "playing";
   }
 
-  spawnFood(x, y) {
-    if (this.foods.length >= CFG.FOOD_MAX) return null;
+  spawnFood(x, y, options = {}) {
+    const maxFood = options.ignoreSoftCap ? CFG.FOOD_HARD_MAX : CFG.FOOD_MAX;
+    if (this.foods.length >= maxFood) return null;
     this.foods.push(new Food({
       x,
       y,
@@ -121,7 +122,7 @@ export class LocalSimulation {
       const t = i / Math.max(1, dropCount - 1);
       const segIndex = Math.floor(t * (snake.segs.length - 1));
       const seg = snake.segs[segIndex];
-      this.spawnFood(seg.x + (Math.random() * 12 - 6), seg.y + (Math.random() * 12 - 6));
+      this.spawnFood(seg.x + (Math.random() * 12 - 6), seg.y + (Math.random() * 12 - 6), { ignoreSoftCap: true });
     }
   }
 
@@ -200,7 +201,7 @@ export class LocalSimulation {
       snake.destroy();
       this.bots[index] = new Bot({
         renderContext: this.renderContext,
-        spawnFood: (x, y) => this.spawnFood(x, y),
+        spawnFood: (x, y, options) => this.spawnFood(x, y, options),
       });
     }, 4000);
   }

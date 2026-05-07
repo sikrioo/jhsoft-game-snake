@@ -1,7 +1,8 @@
 export const CFG = {
   WR: 4400,
   FOOD_N: 1200,
-  FOOD_MAX: 1200,
+  FOOD_MAX: 2000,
+  FOOD_HARD_MAX: 2600,
   STAR_N: 14,
   BOT_N: 14,
   SR: 9,

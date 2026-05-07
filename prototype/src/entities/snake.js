@@ -81,7 +81,18 @@ export class Snake {
   shrink(n = 1) {
     for (let i = 0; i < n && this.segs.length > CFG.MIN_LEN; i++) {
       const tail = this.segs.pop();
-      this.spawnFood(tail.x + rnd(-5, 5), tail.y + rnd(-5, 5));
+      const prevTail = this.segs[this.segs.length - 1] || tail;
+      const dx = tail.x - prevTail.x;
+      const dy = tail.y - prevTail.y;
+      const len = Math.hypot(dx, dy) || 1;
+      const backX = dx / len;
+      const backY = dy / len;
+      const dropDistance = CFG.SR * 2.4;
+      this.spawnFood(
+        tail.x + backX * dropDistance + rnd(-4, 4),
+        tail.y + backY * dropDistance + rnd(-4, 4),
+        { ignoreSoftCap: true }
+      );
     }
   }
 

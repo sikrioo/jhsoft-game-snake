@@ -68,7 +68,7 @@ class DeathFrag {
 
     if (!this.foodDropped && t < 0.45) {
       this.foodDropped = true;
-      if (Math.random() < 0.7) this.spawnFood(this.x + rnd(-5, 5), this.y + rnd(-5, 5));
+      if (Math.random() < 0.7) this.spawnFood(this.x + rnd(-5, 5), this.y + rnd(-5, 5), { ignoreSoftCap: true });
     }
 
     if (this.sp) {

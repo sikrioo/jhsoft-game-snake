@@ -21,7 +21,7 @@ export class ServerSimulation {
     this.effects = new EffectsSystem({
       layerFX: null,
       textures: null,
-      spawnFood: (x, y) => this.spawnFood(x, y),
+      spawnFood: (x, y, options) => this.spawnFood(x, y, options),
     });
     this.foods = [];
     this.stars = [];
@@ -52,7 +52,7 @@ export class ServerSimulation {
     for (let i = 0; i < CFG.BOT_N; i++) {
       const bot = new Bot({
         renderContext: null,
-        spawnFood: (x, y) => this.spawnFood(x, y),
+        spawnFood: (x, y, options) => this.spawnFood(x, y, options),
       });
       bot.netId = this.createEntityId("bot");
       this.bots.push(bot);
@@ -112,7 +112,7 @@ export class ServerSimulation {
       isPlayer: true,
       showNameTag: true,
       renderContext: null,
-      spawnFood: (x, y) => this.spawnFood(x, y),
+      spawnFood: (x, y, options) => this.spawnFood(x, y, options),
     });
 
     this.players.set(id, {
@@ -150,7 +150,7 @@ export class ServerSimulation {
       isPlayer: true,
       showNameTag: true,
       renderContext: null,
-      spawnFood: (x, y) => this.spawnFood(x, y),
+      spawnFood: (x, y, options) => this.spawnFood(x, y, options),
     });
     player.boostE = 100;
     player.boostDT = 0;
@@ -166,8 +166,9 @@ export class ServerSimulation {
     player.input = createPlayerCommand(input);
   }
 
-  spawnFood(x, y) {
-    if (this.foods.length >= CFG.FOOD_MAX) return null;
+  spawnFood(x, y, options = {}) {
+    const maxFood = options.ignoreSoftCap ? CFG.FOOD_HARD_MAX : CFG.FOOD_MAX;
+    if (this.foods.length >= maxFood) return null;
     const food = new Food({
       x,
       y,
@@ -210,7 +211,7 @@ export class ServerSimulation {
       const t = i / Math.max(1, dropCount - 1);
       const segIndex = Math.floor(t * (snake.segs.length - 1));
       const seg = snake.segs[segIndex];
-      this.spawnFood(seg.x + (Math.random() * 12 - 6), seg.y + (Math.random() * 12 - 6));
+      this.spawnFood(seg.x + (Math.random() * 12 - 6), seg.y + (Math.random() * 12 - 6), { ignoreSoftCap: true });
     }
   }
 
