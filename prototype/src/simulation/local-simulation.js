@@ -39,6 +39,7 @@ export class LocalSimulation {
     this.boostDT = 0;
     this.prevBoost = false;
     this.deathTimer = 0;
+    this.frameId = 0;
   }
 
   startNewRun() {
@@ -58,6 +59,7 @@ export class LocalSimulation {
     this.boostDT = 0;
     this.prevBoost = false;
     this.deathTimer = 0;
+    this.frameId = 0;
     this.player = new Snake({
       x: 0,
       y: 0,
@@ -90,6 +92,9 @@ export class LocalSimulation {
       type: "normal",
       layerFood: this.renderContext.layers.food,
       textures: this.renderContext.textures,
+      value: options.value,
+      radius: options.radius,
+      color: options.color,
     }));
     return this.foods[this.foods.length - 1];
   }
@@ -252,12 +257,13 @@ export class LocalSimulation {
     const wantBoost = command.boosting && this.boostE > 0 && this.player.len > CFG.MIN_LEN && this.player.speedBuff === 0;
     this.player.boosting = wantBoost;
     if (wantBoost && !this.prevBoost) this.events.onFlash();
+    if (!wantBoost && this.prevBoost) this.player.flushCompactDropCarry();
     this.prevBoost = wantBoost;
 
     if (wantBoost) {
       this.boostDT++;
       if (this.boostDT >= CFG.BST_DRAIN_F) {
-        this.player.shrink(1);
+        this.player.shrink(1, { compactDrops: true });
         this.boostE = Math.max(0, this.boostE - CFG.BST_E_DRAIN);
         this.boostDT = 0;
       }
@@ -269,7 +275,7 @@ export class LocalSimulation {
     this.eatFoods();
     if (Math.hypot(this.player.head.x, this.player.head.y) > CFG.WR) this.die(this.player, { name: "WALL" });
 
-    if ((wantBoost || this.player.speedBuff > 0) && Math.random() < 0.6) {
+    if ((wantBoost || this.player.speedBuff > 0) && Math.random() < 0.24) {
       const segIndex = Math.min(3, this.player.segs.length - 1);
       this.effects.spark(
         this.player.segs[segIndex].x,
@@ -288,8 +294,8 @@ export class LocalSimulation {
   }
 
   updateConsumables() {
-    for (const food of this.foods) food.tick();
-    for (const star of this.stars) star.tick();
+    for (const food of this.foods) food.tick(this.frameId);
+    for (const star of this.stars) star.tick(this.frameId);
     this.refill();
     if (this.state === "playing") this.checkCollisions();
   }
@@ -302,6 +308,7 @@ export class LocalSimulation {
 
   tick(playerCommand) {
     if (this.state !== "playing" && this.state !== "dying") return;
+    this.frameId += 1;
     this.rebuildGrids();
     this.updatePlayer(playerCommand);
     this.updateBots();

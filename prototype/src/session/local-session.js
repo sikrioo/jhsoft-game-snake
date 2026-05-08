@@ -3,7 +3,6 @@ import { lerp } from "../core/utils.js";
 import { BrowserInputController } from "../input/browser-input.js";
 import { createPlayerCommand, NET_CFG, serializeSimulationSnapshot, SESSION_MODES } from "../network/protocol.js";
 import { drawBackground } from "../render/background.js";
-import { drawHeads } from "../render/snake-heads.js";
 import { LocalSimulation } from "../simulation/local-simulation.js";
 
 export class LocalSession {
@@ -127,7 +126,6 @@ export class LocalSession {
 
     const all = [snapshot.player, ...snapshot.bots].filter(Boolean);
     for (const snake of all) if (!snake.dead) snake.body.update();
-    drawHeads(this.scene.layers.heads, all, CFG.SR);
   }
 
   renderUI(snapshot) {

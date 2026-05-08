@@ -4,7 +4,6 @@ import { BrowserInputController } from "../input/browser-input.js";
 import { ClientReplicaWorld } from "../network/client-replica-world.js";
 import { createPlayerCommand, decodeMessage, encodeMessage, MESSAGE_TYPES, NET_CFG, SESSION_MODES } from "../network/protocol.js";
 import { drawBackground } from "../render/background.js";
-import { drawHeads } from "../render/snake-heads.js";
 import { EffectsSystem } from "../systems/effects-system.js";
 
 export class OnlineSession {
@@ -155,7 +154,6 @@ export class OnlineSession {
     this.effects.tick();
     const snakes = this.replicaWorld.getSnakeList();
     for (const snake of snakes) if (!snake.dead) snake.body.update();
-    drawHeads(this.scene.layers.heads, snakes, CFG.SR);
   }
 
   renderUI() {

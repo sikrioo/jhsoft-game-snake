@@ -81,7 +81,8 @@ export class Bot extends Snake {
     if (this.dead) return;
     this.think(context);
     this.steer(this.ta, 0.07 + this.pers * 0.04);
-    if (this.boosting) this.shrink(1);
+    if (this.boosting) this.shrink(1, { compactDrops: true });
+    else this.flushCompactDropCarry();
     this.move();
   }
 }

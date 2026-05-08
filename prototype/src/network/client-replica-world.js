@@ -115,6 +115,7 @@ export class ClientReplicaWorld {
     this.snakes = new Map();
     this.foods = new Map();
     this.stars = new Map();
+    this.frameId = 0;
   }
 
   reconcileMap(targetMap, sourceList, createEntity) {
@@ -145,12 +146,13 @@ export class ClientReplicaWorld {
   }
 
   tick(selfId) {
+    this.frameId += 1;
     for (const snake of this.snakes.values()) {
       const alpha = snake.id === selfId ? NET_CFG.SELF_INTERP_ALPHA : NET_CFG.REMOTE_INTERP_ALPHA;
       snake.tick(alpha);
     }
-    for (const food of this.foods.values()) food.tick();
-    for (const star of this.stars.values()) star.tick();
+    for (const food of this.foods.values()) food.tick(this.frameId);
+    for (const star of this.stars.values()) star.tick(this.frameId);
   }
 
   getSnakeList() {

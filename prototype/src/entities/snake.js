@@ -35,6 +35,7 @@ export class Snake {
     this.dead = false;
     this.speedBuff = 0;
     this.boosting = false;
+    this.compactDropCarry = 0;
     this.angle = rnd(0, Math.PI * 2);
     this.segs = [];
 
@@ -78,7 +79,25 @@ export class Snake {
     for (let i = 0; i < n; i++) this.segs.push({ ...tail });
   }
 
-  shrink(n = 1) {
+  flushCompactDropCarry() {
+    if (this.compactDropCarry <= 0 || this.segs.length < 1) return;
+    const tail = this.segs[this.segs.length - 1];
+    const prevTail = this.segs[this.segs.length - 2] || tail;
+    const dx = tail.x - prevTail.x;
+    const dy = tail.y - prevTail.y;
+    const len = Math.hypot(dx, dy) || 1;
+    const backX = dx / len;
+    const backY = dy / len;
+    const dropDistance = CFG.SR * 2.2;
+    this.spawnFood(
+      tail.x + backX * dropDistance + rnd(-3, 3),
+      tail.y + backY * dropDistance + rnd(-3, 3),
+      { ignoreSoftCap: true, value: this.compactDropCarry, radius: 3.6 }
+    );
+    this.compactDropCarry = 0;
+  }
+
+  shrink(n = 1, options = {}) {
     for (let i = 0; i < n && this.segs.length > CFG.MIN_LEN; i++) {
       const tail = this.segs.pop();
       const prevTail = this.segs[this.segs.length - 1] || tail;
@@ -88,6 +107,20 @@ export class Snake {
       const backX = dx / len;
       const backY = dy / len;
       const dropDistance = CFG.SR * 2.4;
+
+      if (options.compactDrops) {
+        this.compactDropCarry += 1;
+        if (this.compactDropCarry >= 2) {
+          this.spawnFood(
+            tail.x + backX * dropDistance + rnd(-3, 3),
+            tail.y + backY * dropDistance + rnd(-3, 3),
+            { ignoreSoftCap: true, value: 2, radius: 4.1 }
+          );
+          this.compactDropCarry -= 2;
+        }
+        continue;
+      }
+
       this.spawnFood(
         tail.x + backX * dropDistance + rnd(-4, 4),
         tail.y + backY * dropDistance + rnd(-4, 4),

@@ -112,16 +112,16 @@ export class EffectsSystem {
   }
 
   spark(x, y, angle, color) {
-    const spread = angle + Math.PI + rnd(-0.75, 0.75);
-    const speed = rnd(2, 5);
+    const spread = angle + Math.PI + rnd(-0.6, 0.6);
+    const speed = rnd(1.6, 3.8);
     this.parts.push(new Particle({
       x,
       y,
       color,
       vx: Math.cos(spread) * speed,
       vy: Math.sin(spread) * speed,
-      life: rndI(10, 22),
-      radius: rnd(1.5, 3),
+      life: rndI(8, 16),
+      radius: rnd(1.2, 2.1),
       layerFX: this.layerFX,
       textures: this.textures,
     }));

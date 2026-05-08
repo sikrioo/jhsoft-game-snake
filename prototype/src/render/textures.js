@@ -80,4 +80,129 @@ export class TextureStore {
     this.cache.set(key, texture);
     return texture;
   }
+
+  getHeadShadowTex(radius) {
+    const key = `head-shadow:${radius}`;
+    if (this.cache.has(key)) return this.cache.get(key);
+
+    const pad = 8;
+    const cx = radius * 1.7 + pad;
+    const cy = radius * 1.2 + pad;
+    const g = new PIXI.Graphics();
+    g.beginFill(0xffffff, 1);
+    g.drawEllipse(cx, cy, radius * 1.7, radius * 1.2);
+    g.endFill();
+
+    const texture = this.app.renderer.generateTexture(g, { resolution: 1 });
+    g.destroy();
+    this.cache.set(key, texture);
+    return texture;
+  }
+
+  getHeadBaseTex(radius) {
+    const key = `head-base:${radius}`;
+    if (this.cache.has(key)) return this.cache.get(key);
+
+    const pad = 8;
+    const cx = radius * 1.7 + pad;
+    const cy = radius * 1.2 + pad;
+    const g = new PIXI.Graphics();
+    g.beginFill(0xffffff, 1);
+    g.drawEllipse(cx, cy, radius * 1.7, radius * 1.2);
+    g.endFill();
+
+    const texture = this.app.renderer.generateTexture(g, { resolution: 1 });
+    g.destroy();
+    this.cache.set(key, texture);
+    return texture;
+  }
+
+  getHeadStripeTex(radius) {
+    const key = `head-stripes:${radius}`;
+    if (this.cache.has(key)) return this.cache.get(key);
+
+    const pad = 8;
+    const cx = radius * 1.7 + pad;
+    const cy = radius * 1.2 + pad;
+    const g = new PIXI.Graphics();
+    g.beginFill(0xffffff, 1);
+    g.drawEllipse(cx - radius * 0.25, cy, radius * 0.18, radius * 1.05);
+    g.drawEllipse(cx + radius * 0.2, cy, radius * 0.16, radius * 1.02);
+    g.drawEllipse(cx + radius * 0.62, cy, radius * 0.13, radius * 0.94);
+    g.endFill();
+
+    const texture = this.app.renderer.generateTexture(g, { resolution: 1 });
+    g.destroy();
+    this.cache.set(key, texture);
+    return texture;
+  }
+
+  getEyeWhiteTex(radius) {
+    const key = `eye-white:${radius}`;
+    if (this.cache.has(key)) return this.cache.get(key);
+
+    const pad = 4;
+    const center = radius + pad;
+    const g = new PIXI.Graphics();
+    g.beginFill(0xffffff, 1);
+    g.drawCircle(center, center, radius);
+    g.endFill();
+
+    const texture = this.app.renderer.generateTexture(g, { resolution: 1 });
+    g.destroy();
+    this.cache.set(key, texture);
+    return texture;
+  }
+
+  getEyePupilTex(radius) {
+    const key = `eye-pupil:${radius}`;
+    if (this.cache.has(key)) return this.cache.get(key);
+
+    const pad = 4;
+    const center = radius + pad;
+    const g = new PIXI.Graphics();
+    g.beginFill(0xffffff, 1);
+    g.drawCircle(center, center, radius);
+    g.endFill();
+
+    const texture = this.app.renderer.generateTexture(g, { resolution: 1 });
+    g.destroy();
+    this.cache.set(key, texture);
+    return texture;
+  }
+
+  getMouthSmileTex(radius) {
+    const key = `mouth-smile:${radius}`;
+    if (this.cache.has(key)) return this.cache.get(key);
+
+    const size = radius * 2.2 + 8;
+    const center = size / 2;
+    const g = new PIXI.Graphics();
+    g.lineStyle(2, 0xffffff, 1);
+    g.arc(center + radius * 0.1, center + radius * 0.1, radius * 0.42, 0.28 * Math.PI, 0.72 * Math.PI);
+    g.lineStyle(0);
+
+    const texture = this.app.renderer.generateTexture(g, { resolution: 1 });
+    g.destroy();
+    this.cache.set(key, texture);
+    return texture;
+  }
+
+  getMouthAngryTex(radius) {
+    const key = `mouth-angry:${radius}`;
+    if (this.cache.has(key)) return this.cache.get(key);
+
+    const size = radius * 2.2 + 8;
+    const center = size / 2;
+    const g = new PIXI.Graphics();
+    g.lineStyle(2, 0xffffff, 1);
+    g.moveTo(center - radius * 0.4, center);
+    g.lineTo(center + radius * 0.4, center);
+    g.lineStyle(0);
+
+    const texture = this.app.renderer.generateTexture(g, { resolution: 1 });
+    g.destroy();
+    this.cache.set(key, texture);
+    return texture;
+  }
 }

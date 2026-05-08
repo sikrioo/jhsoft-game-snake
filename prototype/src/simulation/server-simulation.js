@@ -175,6 +175,9 @@ export class ServerSimulation {
       type: "normal",
       layerFood: null,
       textures: null,
+      value: options.value,
+      radius: options.radius,
+      color: options.color,
     });
     food.netId = this.createEntityId("food");
     this.foods.push(food);
@@ -314,12 +317,13 @@ export class ServerSimulation {
       snake.steer(player.input.targetAngle, 0.1);
       const wantBoost = player.input.boosting && player.boostE > 0 && snake.len > CFG.MIN_LEN && snake.speedBuff === 0;
       snake.boosting = wantBoost;
+      if (!wantBoost && player.prevBoost) snake.flushCompactDropCarry();
       player.prevBoost = wantBoost;
 
       if (wantBoost) {
         player.boostDT++;
         if (player.boostDT >= CFG.BST_DRAIN_F) {
-          snake.shrink(1);
+          snake.shrink(1, { compactDrops: true });
           player.boostE = Math.max(0, player.boostE - CFG.BST_E_DRAIN);
           player.boostDT = 0;
         }
@@ -331,7 +335,7 @@ export class ServerSimulation {
       this.eatFoodsForPlayer(player);
       if (Math.hypot(snake.head.x, snake.head.y) > CFG.WR) this.dieSnake(snake, null);
 
-      if ((wantBoost || snake.speedBuff > 0) && Math.random() < 0.6) {
+      if ((wantBoost || snake.speedBuff > 0) && Math.random() < 0.24) {
         const segIndex = Math.min(3, snake.segs.length - 1);
         this.effects.spark(
           snake.segs[segIndex].x,

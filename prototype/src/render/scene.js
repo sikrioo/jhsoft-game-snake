@@ -24,7 +24,7 @@ export function createScene() {
     food: new PIXI.Container(),
     bodies: new PIXI.Container(),
     fx: new PIXI.Container(),
-    heads: new PIXI.Graphics(),
+    heads: new PIXI.Container(),
     names: new PIXI.Container(),
   };
 
