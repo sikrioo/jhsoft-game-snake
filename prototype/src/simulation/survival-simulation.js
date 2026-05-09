@@ -134,6 +134,10 @@ function rollInt(min, max) {
   return min + Math.floor(Math.random() * (max - min + 1));
 }
 
+function getSnakeRadiusValue(snake) {
+  return snake?.radius ?? CFG.SR;
+}
+
 function formatGatePosition(def) {
   const radius = SURVIVAL_WORLD_RADIUS * 0.86;
   if (def.isCenter) return { x: 0, y: 0 };
@@ -225,6 +229,10 @@ export class SurvivalSimulation extends LocalSimulation {
 
   getWaveTimeLeftTicks() {
     return WAVE_TICKS - (this.elapsedTicks % WAVE_TICKS || 0);
+  }
+
+  getWorldRadius() {
+    return SURVIVAL_WORLD_RADIUS;
   }
 
   getTotalTimeLeftTicks() {
@@ -534,13 +542,18 @@ export class SurvivalSimulation extends LocalSimulation {
     for (const snake of all) {
       if (!snake || snake.dead) continue;
       if (snake.spawnProtectionTicks > 0) continue;
-      const nearbySegments = this.segmentsGrid.near(snake.head.x, snake.head.y, CFG.SR * 5);
+    const nearbySegments = this.segmentsGrid.near(
+      snake.head.x,
+      snake.head.y,
+      Math.max(CFG.SR * 5, getSnakeRadiusValue(snake) * 5)
+    );
       for (const { seg, own } of nearbySegments) {
         if (own === snake) continue;
         if (own?.spawnProtectionTicks > 0) continue;
         const playerHitsZombieBody = snake === this.player && own?.skin?.id === "zombie";
         if (playerHitsZombieBody) {
-          if (dist(snake.head.x, snake.head.y, seg.x, seg.y) < CFG.SR * 2) {
+          const hitRadius = getSnakeRadiusValue(snake) + getSnakeRadiusValue(own);
+          if (dist(snake.head.x, snake.head.y, seg.x, seg.y) < hitRadius) {
             this.die(this.player, own);
             break;
           }
@@ -549,14 +562,16 @@ export class SurvivalSimulation extends LocalSimulation {
 
         const zombieHitsPlayerBody = own === this.player && snake.skin?.id === "zombie";
         if (zombieHitsPlayerBody) {
-          if (dist(snake.head.x, snake.head.y, seg.x, seg.y) < CFG.SR * 2) {
+          const hitRadius = getSnakeRadiusValue(snake) + getSnakeRadiusValue(own);
+          if (dist(snake.head.x, snake.head.y, seg.x, seg.y) < hitRadius) {
             this.damagePlayerByZombie(snake, seg);
             break;
           }
           continue;
         }
         if (snake.skin?.id === "zombie" && own?.skin?.id === "zombie") continue;
-        if (dist(snake.head.x, snake.head.y, seg.x, seg.y) < CFG.SR * 2) {
+        const hitRadius = getSnakeRadiusValue(snake) + getSnakeRadiusValue(own);
+        if (dist(snake.head.x, snake.head.y, seg.x, seg.y) < hitRadius) {
           this.die(snake, own);
           break;
         }
@@ -567,7 +582,7 @@ export class SurvivalSimulation extends LocalSimulation {
       if (bot.dead) continue;
       for (let i = this.stars.length - 1; i >= 0; i--) {
         const star = this.stars[i];
-        if (dist(bot.head.x, bot.head.y, star.x, star.y) < CFG.SR + star.r + 2) {
+        if (dist(bot.head.x, bot.head.y, star.x, star.y) < getSnakeRadiusValue(bot) + star.r + 2) {
           bot.grow(star.val);
           bot.speedBuff = CFG.SBUFF_DUR;
           this.removeFood(this.stars, i);
@@ -598,7 +613,7 @@ export class SurvivalSimulation extends LocalSimulation {
         bots: this.bots,
         worldRadius: SURVIVAL_WORLD_RADIUS,
       });
-      if (!bot.dead && Math.hypot(bot.head.x, bot.head.y) > SURVIVAL_WORLD_RADIUS) this.die(bot, { name: "WALL" });
+      if (!bot.dead && Math.hypot(bot.head.x, bot.head.y) > SURVIVAL_WORLD_RADIUS - getSnakeRadiusValue(bot)) this.die(bot, { name: "WALL" });
     }
   }
 

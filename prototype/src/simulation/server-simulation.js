@@ -14,6 +14,10 @@ function findSkinById(skinId) {
 
 const SPAWN_PROTECTION_TICKS = 45;
 
+function getSnakeRadiusValue(snake) {
+  return snake?.radius ?? CFG.SR;
+}
+
 export class ServerSimulation {
   constructor() {
     this.foodsGrid = new Grid(80);
@@ -219,7 +223,12 @@ export class ServerSimulation {
   }
 
   isHeadOnCollision(snake, killerSnake) {
-    return Boolean(killerSnake?.head && dist(snake.head.x, snake.head.y, killerSnake.head.x, killerSnake.head.y) < CFG.SR * 2.8);
+    const snakeRadius = getSnakeRadiusValue(snake);
+    const killerRadius = getSnakeRadiusValue(killerSnake);
+    return Boolean(
+      killerSnake?.head &&
+      dist(snake.head.x, snake.head.y, killerSnake.head.x, killerSnake.head.y) < (snakeRadius + killerRadius) * 1.4
+    );
   }
 
   attractNearbyFoodsToSnake(snake) {
@@ -252,7 +261,7 @@ export class ServerSimulation {
 
     const px = snake.head.x;
     const py = snake.head.y;
-    const pr = CFG.SR;
+    const pr = snake.radius ?? CFG.SR;
 
     this.attractNearbyFoodsToSnake(snake);
 
@@ -355,7 +364,7 @@ export class ServerSimulation {
 
       snake.move();
       this.eatFoodsForPlayer(player);
-      if (Math.hypot(snake.head.x, snake.head.y) > CFG.WR) this.dieSnake(snake, null);
+      if (Math.hypot(snake.head.x, snake.head.y) > CFG.WR - getSnakeRadiusValue(snake)) this.dieSnake(snake, null);
 
       if ((wantBoost || snake.speedBuff > 0) && Math.random() < 0.24) {
         const segIndex = Math.min(3, snake.segs.length - 1);
@@ -388,7 +397,7 @@ export class ServerSimulation {
         player: targetPlayer?.snake ?? null,
       });
 
-      if (!bot.dead && Math.hypot(bot.head.x, bot.head.y) > CFG.WR) this.dieSnake(bot, null);
+      if (!bot.dead && Math.hypot(bot.head.x, bot.head.y) > CFG.WR - getSnakeRadiusValue(bot)) this.dieSnake(bot, null);
     }
   }
 
@@ -409,11 +418,16 @@ export class ServerSimulation {
     for (const snake of allSnakes) {
       if (!snake || snake.dead) continue;
       if (protectedSnakes.has(snake)) continue;
-      const nearbySegments = this.segmentsGrid.near(snake.head.x, snake.head.y, CFG.SR * 5);
+      const nearbySegments = this.segmentsGrid.near(
+        snake.head.x,
+        snake.head.y,
+        Math.max(CFG.SR * 5, getSnakeRadiusValue(snake) * 5)
+      );
       for (const { seg, own } of nearbySegments) {
         if (own === snake) continue;
         if (protectedSnakes.has(own)) continue;
-        if (dist(snake.head.x, snake.head.y, seg.x, seg.y) < CFG.SR * 2) {
+        const hitRadius = getSnakeRadiusValue(snake) + getSnakeRadiusValue(own);
+        if (dist(snake.head.x, snake.head.y, seg.x, seg.y) < hitRadius) {
           this.dieSnake(snake, own);
           break;
         }
@@ -424,7 +438,7 @@ export class ServerSimulation {
       if (bot.dead) continue;
       for (let i = this.stars.length - 1; i >= 0; i--) {
         const star = this.stars[i];
-        if (dist(bot.head.x, bot.head.y, star.x, star.y) < CFG.SR + star.r + 2) {
+        if (dist(bot.head.x, bot.head.y, star.x, star.y) < getSnakeRadiusValue(bot) + star.r + 2) {
           bot.grow(star.val);
           bot.speedBuff = CFG.SBUFF_DUR;
           this.removeFood(this.stars, i);

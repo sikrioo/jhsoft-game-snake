@@ -2,6 +2,15 @@ import { CFG } from "../config/game-config.js";
 import { lerpA, rnd } from "../core/utils.js";
 import { SnakeBody } from "./snake-body.js";
 
+export function getSnakeSizeScale(length) {
+  const excessLen = Math.max(0, length - CFG.MIN_LEN);
+  return 1 + Math.min(0.58, Math.sqrt(excessLen) * 0.055);
+}
+
+export function getSnakeRadius(length) {
+  return CFG.SR * getSnakeSizeScale(length);
+}
+
 export function enrichSkin(skin) {
   const enriched = { ...skin };
   if (enriched.id === "rainbow") {
@@ -57,6 +66,14 @@ export class Snake {
 
   get len() {
     return this.segs.length;
+  }
+
+  get sizeScale() {
+    return getSnakeSizeScale(this.len);
+  }
+
+  get radius() {
+    return getSnakeRadius(this.len);
   }
 
   get effSpeed() {

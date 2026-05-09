@@ -1,4 +1,5 @@
 import { lerp, lerpA } from "../core/utils.js";
+import { getSnakeRadius, getSnakeSizeScale } from "../entities/snake.js";
 import { NET_CFG } from "./protocol.js";
 import { SnakeBody } from "../entities/snake-body.js";
 
@@ -66,6 +67,14 @@ class SnakeReplica {
 
   get len() {
     return this.segs.length;
+  }
+
+  get sizeScale() {
+    return getSnakeSizeScale(this.len);
+  }
+
+  get radius() {
+    return getSnakeRadius(this.len);
   }
 
   updateFromSnapshot(snapshot) {

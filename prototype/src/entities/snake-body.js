@@ -383,9 +383,11 @@ export class SnakeBody {
   updateHead(buffed, now) {
     const head = this.snake.segs[0];
     const style = getHeadStyle(this.snake, buffed, now);
+    const sizeScale = this.snake.sizeScale ?? 1;
 
     this.headContainer.position.set(head.x, head.y);
     this.headContainer.rotation = this.snake.angle;
+    this.headContainer.scale.set(sizeScale);
     this.headShadow.tint = style.shadowTint;
     this.headShadow.alpha = style.shadowAlpha;
     this.headBase.tint = style.baseTint;
@@ -408,7 +410,7 @@ export class SnakeBody {
       this.headAura.clear();
       for (let i = 0; i < Math.min(8, this.snake.segs.length - 1); i++) {
         const alpha = (1 - i / 8) * auraAlpha;
-        this.headAura.lineStyle(style.auraWidth * (1 - i * 0.09), auraColor, alpha);
+        this.headAura.lineStyle(style.auraWidth * sizeScale * (1 - i * 0.09), auraColor, alpha);
         this.headAura.moveTo(this.snake.segs[i].x, this.snake.segs[i].y);
         this.headAura.lineTo(this.snake.segs[i + 1].x, this.snake.segs[i + 1].y);
       }
@@ -431,6 +433,7 @@ export class SnakeBody {
     const now = Date.now();
     const rainbowPhase = Math.floor((now * 0.08) % 360);
     const hitMix = this.snake.hitFlashTicks > 0 ? Math.min(0.55, this.snake.hitFlashTicks / 12) : 0;
+    const sizeScale = this.snake.sizeScale ?? 1;
     if (this.snake.hitFlashTicks > 0) this.snake.hitFlashTicks--;
 
     for (let i = 0; i < bodyCount; i++) {
@@ -441,7 +444,7 @@ export class SnakeBody {
       const style = getSegmentStyle(this.snake, i, t, buffed, rainbowPhase);
       sprite.visible = true;
       sprite.position.set(seg.x, seg.y);
-      sprite.scale.set(style.scale);
+      sprite.scale.set(style.scale * sizeScale);
       sprite.tint = hitMix > 0 ? mixHex(style.tint, 0xff5a66, hitMix) : style.tint;
       sprite.alpha = style.alpha;
     }
@@ -455,7 +458,7 @@ export class SnakeBody {
 
     if (this.nameText) {
       const head = segs[0];
-      this.nameText.position.set(head.x, head.y - CFG.SR * 2.8);
+      this.nameText.position.set(head.x, head.y - CFG.SR * 2.8 * sizeScale);
       this.nameText.alpha = buffed ? 0.85 : 0.48;
     }
   }

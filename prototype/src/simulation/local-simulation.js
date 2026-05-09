@@ -9,6 +9,10 @@ import { EffectsSystem } from "../systems/effects-system.js";
 
 const START_SPAWN_PROTECTION_TICKS = 45;
 
+function getSnakeRadiusValue(snake) {
+  return snake?.radius ?? CFG.SR;
+}
+
 export class LocalSimulation {
   constructor({ renderContext, selectedSkinRef, playerNameRef, events = {} }) {
     this.renderContext = renderContext;
@@ -90,6 +94,10 @@ export class LocalSimulation {
     this.state = "playing";
   }
 
+  getWorldRadius() {
+    return CFG.WR;
+  }
+
   spawnFood(x, y, options = {}) {
     const maxFood = options.ignoreSoftCap ? CFG.FOOD_HARD_MAX : CFG.FOOD_MAX;
     if (this.foods.length >= maxFood) return null;
@@ -139,7 +147,12 @@ export class LocalSimulation {
   }
 
   isHeadOnCollision(snake, killer) {
-    return Boolean(killer?.head && dist(snake.head.x, snake.head.y, killer.head.x, killer.head.y) < CFG.SR * 2.8);
+    const snakeRadius = getSnakeRadiusValue(snake);
+    const killerRadius = getSnakeRadiusValue(killer);
+    return Boolean(
+      killer?.head &&
+      dist(snake.head.x, snake.head.y, killer.head.x, killer.head.y) < (snakeRadius + killerRadius) * 1.4
+    );
   }
 
   attractNearbyFoodsToPlayer() {
@@ -167,7 +180,7 @@ export class LocalSimulation {
 
     const px = this.player.head.x;
     const py = this.player.head.y;
-    const pr = CFG.SR;
+    const pr = this.player.radius ?? CFG.SR;
 
     this.attractNearbyFoodsToPlayer();
 
@@ -250,11 +263,16 @@ export class LocalSimulation {
     const all = [this.player, ...this.bots];
     for (const snake of all) {
       if (!snake || snake.dead) continue;
-      const nearbySegments = this.segmentsGrid.near(snake.head.x, snake.head.y, CFG.SR * 5);
+      const nearbySegments = this.segmentsGrid.near(
+        snake.head.x,
+        snake.head.y,
+        Math.max(CFG.SR * 5, getSnakeRadiusValue(snake) * 5)
+      );
       for (const { seg, own } of nearbySegments) {
         if (own === snake) continue;
         if (snake.spawnProtectionTicks > 0 || own?.spawnProtectionTicks > 0) continue;
-        if (dist(snake.head.x, snake.head.y, seg.x, seg.y) < CFG.SR * 2) {
+        const hitRadius = getSnakeRadiusValue(snake) + getSnakeRadiusValue(own);
+        if (dist(snake.head.x, snake.head.y, seg.x, seg.y) < hitRadius) {
           this.die(snake, own);
           break;
         }
@@ -265,7 +283,7 @@ export class LocalSimulation {
       if (bot.dead) continue;
       for (let i = this.stars.length - 1; i >= 0; i--) {
         const star = this.stars[i];
-        if (dist(bot.head.x, bot.head.y, star.x, star.y) < CFG.SR + star.r + 2) {
+        if (dist(bot.head.x, bot.head.y, star.x, star.y) < getSnakeRadiusValue(bot) + star.r + 2) {
           bot.grow(star.val);
           bot.speedBuff = CFG.SBUFF_DUR;
           this.removeFood(this.stars, i);
@@ -310,7 +328,9 @@ export class LocalSimulation {
     if (this.player.spawnProtectionTicks > 0) this.player.spawnProtectionTicks--;
     this.player.move();
     this.eatFoods();
-    if (Math.hypot(this.player.head.x, this.player.head.y) > CFG.WR) this.die(this.player, { name: "WALL" });
+    if (Math.hypot(this.player.head.x, this.player.head.y) > this.getWorldRadius() - getSnakeRadiusValue(this.player)) {
+      this.die(this.player, { name: "WALL" });
+    }
 
     if ((wantBoost || this.player.speedBuff > 0) && Math.random() < 0.24) {
       const segIndex = Math.min(3, this.player.segs.length - 1);
@@ -327,7 +347,9 @@ export class LocalSimulation {
     for (const bot of this.bots) {
       if (bot.spawnProtectionTicks > 0) bot.spawnProtectionTicks--;
       bot.update({ foodsGrid: this.foodsGrid, stars: this.stars, player: this.player });
-      if (!bot.dead && Math.hypot(bot.head.x, bot.head.y) > CFG.WR) this.die(bot, { name: "WALL" });
+      if (!bot.dead && Math.hypot(bot.head.x, bot.head.y) > this.getWorldRadius() - getSnakeRadiusValue(bot)) {
+        this.die(bot, { name: "WALL" });
+      }
     }
   }
 
