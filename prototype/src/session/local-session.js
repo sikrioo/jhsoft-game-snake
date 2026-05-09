@@ -19,6 +19,9 @@ export class LocalSession {
     this.wasDeadShown = false;
     this.fixedStepMs = 1000 / NET_CFG.TICK_RATE;
     this.accumulatorMs = 0;
+    this.shakeTicks = 0;
+    this.shakePower = 0;
+    this.hitstopMs = 0;
 
     this.simulation = new LocalSimulation({
       renderContext: { layers: this.scene.layers, textures: this.textures },
@@ -28,6 +31,13 @@ export class LocalSession {
         onFlash: (color) => this.ui.flash(color),
         onSpeedBuff: () => this.ui.showSpeedBuff(),
         onKillFeed: (killer, victim, type) => this.ui.addKillFeed(killer, victim, type),
+        onShake: (ticks, power) => {
+          this.shakeTicks = Math.max(this.shakeTicks, ticks);
+          this.shakePower = Math.max(this.shakePower, power);
+        },
+        onImpact: (ticks) => {
+          this.hitstopMs = Math.max(this.hitstopMs, ticks * this.fixedStepMs);
+        },
       },
     });
 
@@ -55,6 +65,9 @@ export class LocalSession {
     this.simulation.startNewRun();
     this.cam = { x: 0, y: 0, zoom: 1 };
     this.wasDeadShown = false;
+    this.hitstopMs = 0;
+    this.shakeTicks = 0;
+    this.shakePower = 0;
     this.ui.resetTransientUI();
     this.ui.clearKillFeed();
     this.applyCamera();
@@ -70,9 +83,12 @@ export class LocalSession {
     this.bgDirty = true;
   }
 
-  applyCamera() {
+  applyCamera(shakeX = 0, shakeY = 0) {
     const { width, height } = this.scene.size;
-    this.scene.world.position.set(width / 2 - this.cam.x * this.cam.zoom, height / 2 - this.cam.y * this.cam.zoom);
+    this.scene.world.position.set(
+      width / 2 - this.cam.x * this.cam.zoom + shakeX,
+      height / 2 - this.cam.y * this.cam.zoom + shakeY
+    );
     this.scene.world.scale.set(this.cam.zoom);
   }
 
@@ -113,7 +129,16 @@ export class LocalSession {
       this.markBGDirty();
     }
 
-    this.applyCamera();
+    let shakeX = 0;
+    let shakeY = 0;
+    if (this.shakeTicks > 0) {
+      shakeX = (Math.random() * 2 - 1) * this.shakePower * 8;
+      shakeY = (Math.random() * 2 - 1) * this.shakePower * 8;
+      this.shakeTicks--;
+      this.shakePower *= 0.92;
+    }
+
+    this.applyCamera(shakeX, shakeY);
   }
 
   renderWorld(snapshot) {
@@ -162,6 +187,15 @@ export class LocalSession {
   }
 
   tick(deltaMS) {
+    if (this.hitstopMs > 0) {
+      this.hitstopMs = Math.max(0, this.hitstopMs - deltaMS);
+      const snapshot = serializeSimulationSnapshot(this.simulation);
+      this.updateCamera(snapshot);
+      this.renderWorld(snapshot);
+      this.renderUI(snapshot);
+      return;
+    }
+
     this.accumulatorMs += deltaMS;
 
     while (this.accumulatorMs >= this.fixedStepMs) {

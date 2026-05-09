@@ -28,6 +28,7 @@ export class SurvivalSession {
     this.resultShown = false;
     this.shakeTicks = 0;
     this.shakePower = 0;
+    this.hitstopMs = 0;
 
     this.simulation = new SurvivalSimulation({
       renderContext: { layers: this.scene.layers, textures: this.textures },
@@ -41,6 +42,9 @@ export class SurvivalSession {
         onShake: (ticks, power) => {
           this.shakeTicks = Math.max(this.shakeTicks, ticks);
           this.shakePower = Math.max(this.shakePower, power);
+        },
+        onImpact: (ticks) => {
+          this.hitstopMs = Math.max(this.hitstopMs, ticks * this.fixedStepMs);
         },
       },
     });
@@ -77,6 +81,7 @@ export class SurvivalSession {
     this.resultShown = false;
     this.shakeTicks = 0;
     this.shakePower = 0;
+    this.hitstopMs = 0;
     this.applyCamera();
     this.markBGDirty();
   }
@@ -220,6 +225,14 @@ export class SurvivalSession {
   }
 
   tick(deltaMS) {
+    if (this.hitstopMs > 0) {
+      this.hitstopMs = Math.max(0, this.hitstopMs - deltaMS);
+      this.updateCamera();
+      this.renderWorld();
+      this.renderUI();
+      return;
+    }
+
     this.accumulatorMs += deltaMS;
 
     while (this.accumulatorMs >= this.fixedStepMs) {

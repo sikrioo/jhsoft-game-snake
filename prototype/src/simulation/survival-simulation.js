@@ -17,6 +17,7 @@ const PLAYER_ZOMBIE_HIT_SHRINK = 2;
 const SURVIVAL_FOOD_TARGET = Math.max(96, Math.floor((CFG.FOOD_N / 4) * 0.8));
 const SURVIVAL_STAR_TARGET = Math.max(3, Math.floor(CFG.STAR_N / 4));
 const ZOMBIE_SKIN = SKINS.find((skin) => skin.id === "zombie") || SKINS[0];
+const INTRO_ZOMBIE_TYPES = ["basic", "fast", "long", "elite"];
 
 const GATE_DEFS = [
   { id: "north", x: 0, y: -1, kind: "warn", label: "NORTH GATE OPENED" },
@@ -129,6 +130,10 @@ function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
 
+function rollInt(min, max) {
+  return min + Math.floor(Math.random() * (max - min + 1));
+}
+
 function formatGatePosition(def) {
   const radius = SURVIVAL_WORLD_RADIUS * 0.86;
   if (def.isCenter) return { x: 0, y: 0 };
@@ -144,6 +149,7 @@ export class SurvivalSimulation extends LocalSimulation {
       onKillFeed: () => {},
       onBanner: () => {},
       onShake: () => {},
+      onImpact: () => {},
       ...this.events,
     };
     this.gates = [];
@@ -151,7 +157,7 @@ export class SurvivalSimulation extends LocalSimulation {
     this.wave = 1;
     this.result = null;
     this.centerIntroShown = false;
-    this.playerHitCooldownTicks = 0;
+    this.pendingIntroZombieTypes = [...INTRO_ZOMBIE_TYPES];
     this.playerHitCooldownTicks = 0;
   }
 
@@ -195,8 +201,10 @@ export class SurvivalSimulation extends LocalSimulation {
     this.wave = 1;
     this.result = null;
     this.centerIntroShown = false;
+    this.pendingIntroZombieTypes = [...INTRO_ZOMBIE_TYPES];
     this.events.onBanner("WAVE 1 START · NORTH GATE OPENED", "warn", 2200);
     this.applyWaveConfig(1, false);
+    this.spawnIntroZombieSet();
   }
 
   getSpawnIntervalTicks() {
@@ -282,11 +290,43 @@ export class SurvivalSimulation extends LocalSimulation {
     }
   }
 
+  buildBotSpec(type, intro = false) {
+    const ranges = intro
+      ? {
+          basic: [20, 24],
+          fast: [18, 22],
+          long: [34, 42],
+          elite: [28, 34],
+        }
+      : {
+          basic: [20, 31],
+          fast: [18, 27],
+          long: [54, 69],
+          elite: [68, 68],
+        };
+    const [minLen, maxLen] = ranges[type] || ranges.basic;
+    return {
+      profile: BOT_PROFILES[type] || BOT_PROFILES.basic,
+      len: rollInt(minLen, maxLen),
+    };
+  }
+
   pickBotSpec() {
-    if (this.wave >= 5 && Math.random() < 0.22) return { profile: BOT_PROFILES.elite, len: 68 };
-    if (this.wave >= 3 && Math.random() < 0.35) return { profile: BOT_PROFILES.long, len: 54 + Math.floor(Math.random() * 16) };
-    if (this.wave >= 2 && Math.random() < 0.4) return { profile: BOT_PROFILES.fast, len: 18 + Math.floor(Math.random() * 10) };
-    return { profile: BOT_PROFILES.basic, len: 20 + Math.floor(Math.random() * 12) };
+    if (this.pendingIntroZombieTypes.length > 0) {
+      return this.buildBotSpec(this.pendingIntroZombieTypes.shift(), true);
+    }
+    if (this.wave >= 5 && Math.random() < 0.22) return this.buildBotSpec("elite");
+    if (this.wave >= 3 && Math.random() < 0.35) return this.buildBotSpec("long");
+    if (this.wave >= 2 && Math.random() < 0.4) return this.buildBotSpec("fast");
+    return this.buildBotSpec("basic");
+  }
+
+  spawnIntroZombieSet() {
+    for (const gate of this.gates) {
+      if (!gate.active || gate.isCenter) continue;
+      if (this.pendingIntroZombieTypes.length <= 0) break;
+      this.spawnGateBot(gate, 0, 1);
+    }
   }
 
   spawnGateBot(gate, slotIndex = 0, totalSlots = 1) {
@@ -399,6 +439,8 @@ export class SurvivalSimulation extends LocalSimulation {
 
     if (snake.dead) return;
     const headOn = this.isHeadOnCollision(snake, killer);
+    const impactTicks = headOn ? 5 : 3;
+    const impactPower = headOn ? 0.4 : 0.22;
     snake.dead = true;
     snake.boosting = false;
     snake.cleanupTicks = 22;
@@ -407,27 +449,36 @@ export class SurvivalSimulation extends LocalSimulation {
     if (isZombie) {
       this.effects.spawnDeathFragments(snake, {
         foodDropChance: 0,
-        strideMultiplier: 4,
+        strideMultiplier: 2,
+        speedMin: 4.2,
+        speedMax: 10.4,
+        drag: 0.908,
+        lifeMin: 12,
+        lifeMax: 20,
+        scaleMin: 0.92,
+        scaleMax: 1.35,
+        spinMin: -0.18,
+        spinMax: 0.18,
+        tintSat: 78,
+        tintLight: 52,
       });
+      this.effects.zombieCollisionBurst(snake.head.x, snake.head.y, hslHex(snake.skin.hue, 100, 62));
+      this.events.onShake(headOn ? 10 : 6, headOn ? 0.42 : 0.26);
+      this.events.onFlash(headOn ? "rgba(255,242,198,0.16)" : "rgba(167,255,93,0.09)");
     } else {
       this.effects.spawnDeathFragments(snake, {
         foodDropChance: 0.7,
       });
+      this.effects.burst(snake.head.x, snake.head.y, hslHex(snake.skin.hue, 100, 62), 18, 5, 12, 4.2);
     }
-    this.effects.burst(
-      snake.head.x,
-      snake.head.y,
-      hslHex(snake.skin.hue, 100, 62),
-      isZombie ? 6 : 18,
-      isZombie ? 3.2 : 5,
-      isZombie ? 8 : 12,
-      isZombie ? 2.8 : 4.2
-    );
+    this.events.onImpact(impactTicks);
+    if (!isZombie) this.events.onShake(impactTicks + 1, impactPower);
     if (headOn && killer?.head) {
       const midX = (snake.head.x + killer.head.x) / 2;
       const midY = (snake.head.y + killer.head.y) / 2;
       if (isZombie) {
-        this.effects.burst(midX, midY, hslHex(snake.skin.hue, 100, 68), 10, 4.2, 9, 3.4);
+        this.effects.zombieCollisionBurst(midX, midY, hslHex(snake.skin.hue, 100, 68));
+        this.effects.shardBurst(killer.head.x, killer.head.y, 0xfff1c2, 5, 6.8, 10, 4.2);
       } else {
         this.effects.collisionBurst(midX, midY, hslHex(snake.skin.hue, 100, 68));
         this.effects.collisionBurst(snake.head.x, snake.head.y, 0xd9ff9b);
@@ -468,6 +519,7 @@ export class SurvivalSimulation extends LocalSimulation {
     this.playerHitCooldownTicks = PLAYER_ZOMBIE_HIT_COOLDOWN_TICKS;
     this.events.onFlash("rgba(255,88,88,0.18)");
     this.events.onShake(7, 0.32);
+    this.events.onImpact(3);
 
     this.effects.burst(hitPoint.x, hitPoint.y, 0xfff1c2, 5, 2.4, 8, 2.4);
     this.effects.burst(hitPoint.x, hitPoint.y, 0xff6a6a, 4, 2.1, 9, 2.1);

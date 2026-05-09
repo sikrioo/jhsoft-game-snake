@@ -4,6 +4,14 @@ export class TextureStore {
     this.cache = new Map();
   }
 
+  quantizeRadius(radius) {
+    if (radius <= 4) return 4;
+    if (radius <= 6) return 6;
+    if (radius <= 8) return 8;
+    if (radius <= 10) return 10;
+    return 12;
+  }
+
   getCircleTex(color, radius, glowAlpha = 0) {
     const key = `c:${color}:${radius}:${glowAlpha}`;
     if (this.cache.has(key)) return this.cache.get(key);
@@ -73,6 +81,38 @@ export class TextureStore {
     g.endFill();
     g.beginFill(0xffffff, 0.28);
     g.drawCircle(center - radius * 0.24, center - radius * 0.24, radius * 0.38);
+    g.endFill();
+
+    const texture = this.app.renderer.generateTexture(g, { resolution: 1 });
+    g.destroy();
+    this.cache.set(key, texture);
+    return texture;
+  }
+
+  getShardTex(radius) {
+    const qRadius = this.quantizeRadius(radius);
+    const key = `shard:${qRadius}`;
+    if (this.cache.has(key)) return this.cache.get(key);
+
+    const pad = 6;
+    const size = qRadius * 2 + pad * 2;
+    const cx = size / 2;
+    const cy = size / 2;
+    const g = new PIXI.Graphics();
+    g.beginFill(0xffffff, 1);
+    g.drawPolygon([
+      cx - qRadius * 0.95, cy - qRadius * 0.12,
+      cx - qRadius * 0.2, cy - qRadius * 0.82,
+      cx + qRadius * 0.92, cy - qRadius * 0.18,
+      cx + qRadius * 0.28, cy + qRadius * 0.86,
+    ]);
+    g.endFill();
+    g.beginFill(0xffffff, 0.24);
+    g.drawPolygon([
+      cx - qRadius * 0.2, cy - qRadius * 0.48,
+      cx + qRadius * 0.44, cy - qRadius * 0.14,
+      cx - qRadius * 0.06, cy + qRadius * 0.28,
+    ]);
     g.endFill();
 
     const texture = this.app.renderer.generateTexture(g, { resolution: 1 });

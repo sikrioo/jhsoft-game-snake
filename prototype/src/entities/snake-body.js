@@ -38,11 +38,18 @@ const RAINBOW_HEAD_BASE_PLAYER = buildHueRamp(88, 63);
 const RAINBOW_HEAD_BASE_BOT = buildHueRamp(88, 52);
 const RAINBOW_HEAD_SHADOW = buildHueRamp(70, 10);
 
+function getZombieVariant(snake) {
+  return snake.botType || "basic";
+}
+
 function getSegmentStyle(snake, bodyIndex, t, buffed, rainbowPhase) {
+  const baseScale = 0.68 + 0.32 * t;
+
   if (buffed) {
     return {
       tint: hslHex(45, snake.isPlayer ? 82 : 68, snake.isPlayer ? 42 + t * 20 : 32 + t * 18),
       alpha: 0.6 + t * 0.3,
+      scale: baseScale,
     };
   }
 
@@ -51,6 +58,7 @@ function getSegmentStyle(snake, bodyIndex, t, buffed, rainbowPhase) {
     return {
       tint: snake.isPlayer ? RAINBOW_PLAYER_TINTS[wave] : RAINBOW_BOT_TINTS[wave],
       alpha: 0.64 + t * 0.28,
+      scale: baseScale,
     };
   }
 
@@ -58,13 +66,38 @@ function getSegmentStyle(snake, bodyIndex, t, buffed, rainbowPhase) {
     return {
       tint: hslHex(188, 44, snake.isPlayer ? 80 + t * 8 : 72 + t * 8),
       alpha: snake.isPlayer ? 0.32 + t * 0.16 : 0.24 + t * 0.14,
+      scale: baseScale,
     };
   }
 
   if (snake.skin.pattern === "zombie") {
+    const variant = getZombieVariant(snake);
+    if (variant === "fast") {
+      return {
+        tint: hslHex(118, 62, 28 + t * 32),
+        alpha: 0.58 + t * 0.36,
+        scale: 0.58 + 0.24 * t,
+      };
+    }
+    if (variant === "long") {
+      const band = bodyIndex % 3 === 1;
+      return {
+        tint: hslHex(95, band ? 28 : 18, band ? 36 : 24),
+        alpha: 0.82 + t * 0.12,
+        scale: 0.76 + 0.38 * t,
+      };
+    }
+    if (variant === "elite") {
+      return {
+        tint: hslHex(92, 48, 30 + t * 18),
+        alpha: 0.78 + t * 0.2,
+        scale: 0.72 + 0.34 * t,
+      };
+    }
     return {
       tint: hslHex(108, snake.isPlayer ? 44 : 36, snake.isPlayer ? 38 + t * 14 : 28 + t * 12),
       alpha: 0.72 + t * 0.18,
+      scale: baseScale,
     };
   }
 
@@ -72,16 +105,19 @@ function getSegmentStyle(snake, bodyIndex, t, buffed, rainbowPhase) {
     return {
       tint: snake.isPlayer ? ZEBRA_PLAYER_TINTS[bodyIndex % 4] : ZEBRA_BOT_TINTS[bodyIndex % 4],
       alpha: 0.68 + t * 0.2,
+      scale: baseScale,
     };
   }
 
   return {
     tint: hslHex(snake.skin.hue, snake.isPlayer ? 82 : 68, snake.isPlayer ? 42 + t * 20 : 32 + t * 18),
     alpha: 0.6 + t * 0.3,
+    scale: baseScale,
   };
 }
 
 function getHeadStyle(snake, buffed, now) {
+  const zombieVariant = snake.skin.pattern === "zombie" ? getZombieVariant(snake) : null;
   const hue = buffed
     ? 45
     : snake.skin.pattern === "rainbow"
@@ -104,11 +140,93 @@ function getHeadStyle(snake, buffed, now) {
       stripeVisible: false,
       stripeAlpha: 0.92,
       mood: snake.skin.mood,
+      stripeTint: 0x0f1118,
+      auraColor: 0x00ffc8,
+      auraIdleAlpha: 0,
+      auraBoostAlpha: 0.13,
+      auraBuffAlpha: 0.09,
+      auraWidth: CFG.SR * 3.6,
+    };
+  }
+
+  if (snake.skin.pattern === "zombie") {
+    if (zombieVariant === "fast") {
+      return {
+        shadowTint: hslHex(124, 52, 10),
+        shadowAlpha: 0.38,
+        baseTint: hslHex(118, 58, 54),
+        baseAlpha: 0.94,
+        glossAlpha: 0.07,
+        stripeVisible: false,
+        stripeAlpha: 0,
+        stripeTint: 0x14200d,
+        mood: snake.skin.mood,
+        auraColor: 0x92ff6a,
+        auraIdleAlpha: 0,
+        auraBoostAlpha: 0.15,
+        auraBuffAlpha: 0.11,
+        auraWidth: CFG.SR * 3.7,
+      };
+    }
+
+    if (zombieVariant === "long") {
+      return {
+        shadowTint: hslHex(92, 20, 8),
+        shadowAlpha: 0.46,
+        baseTint: hslHex(94, 22, 42),
+        baseAlpha: 0.98,
+        glossAlpha: 0.06,
+        stripeVisible: true,
+        stripeAlpha: 0.42,
+        stripeTint: 0x253018,
+        mood: snake.skin.mood,
+        auraColor: 0x7ea15d,
+        auraIdleAlpha: 0,
+        auraBoostAlpha: 0.1,
+        auraBuffAlpha: 0.08,
+        auraWidth: CFG.SR * 3.9,
+      };
+    }
+
+    if (zombieVariant === "elite") {
+      return {
+        shadowTint: hslHex(78, 52, 9),
+        shadowAlpha: 0.54,
+        baseTint: hslHex(88, 46, 48),
+        baseAlpha: 0.98,
+        glossAlpha: 0.28,
+        stripeVisible: false,
+        stripeAlpha: 0,
+        stripeTint: 0x27160d,
+        mood: snake.skin.mood,
+        auraColor: 0xb4ff50,
+        auraIdleAlpha: 0.06,
+        auraBoostAlpha: 0.17,
+        auraBuffAlpha: 0.12,
+        auraWidth: CFG.SR * 4.2,
+      };
+    }
+
+    return {
+      shadowTint: hslHex(108, 70, 10),
+      shadowAlpha: 0.42,
+      baseTint: hslHex(108, 40, snake.isPlayer ? 58 : 46),
+      baseAlpha: 0.96,
+      glossAlpha: 0.1,
+      stripeVisible: false,
+      stripeAlpha: 0,
+      stripeTint: 0x0f1118,
+      mood: snake.skin.mood,
+      auraColor: 0x7ddf5f,
+      auraIdleAlpha: 0,
+      auraBoostAlpha: 0.13,
+      auraBuffAlpha: 0.09,
+      auraWidth: CFG.SR * 3.6,
     };
   }
 
   return {
-      shadowTint: hslHex(hue, snake.skin.pattern === "ghost" ? 24 : 70, snake.skin.pattern === "ghost" ? 18 : snake.skin.pattern === "zebra" ? 8 : 10),
+    shadowTint: hslHex(hue, snake.skin.pattern === "ghost" ? 24 : 70, snake.skin.pattern === "ghost" ? 18 : snake.skin.pattern === "zebra" ? 8 : 10),
     shadowAlpha: snake.skin.pattern === "ghost" ? 0.32 : snake.skin.pattern === "zombie" ? 0.42 : 0.55,
     baseTint: hslHex(
       hue,
@@ -120,6 +238,12 @@ function getHeadStyle(snake, buffed, now) {
     stripeVisible: snake.skin.pattern === "zebra",
     stripeAlpha: 0.92,
     mood: snake.skin.mood,
+    stripeTint: 0x0f1118,
+    auraColor: 0x00ffc8,
+    auraIdleAlpha: 0,
+    auraBoostAlpha: 0.13,
+    auraBuffAlpha: 0.09,
+    auraWidth: CFG.SR * 3.6,
   };
 }
 
@@ -269,16 +393,22 @@ export class SnakeBody {
     this.headGloss.alpha = style.glossAlpha;
     this.headStripes.visible = style.stripeVisible;
     this.headStripes.alpha = style.stripeAlpha;
+    this.headStripes.tint = style.stripeTint;
     this.mouthSmile.visible = style.mood === "smile";
     this.mouthAngry.visible = style.mood === "angry";
 
-    if (this.snake.boosting || buffed) {
-      const auraColor = buffed ? 0xffd060 : 0x00ffc8;
+    if (this.snake.boosting || buffed || style.auraIdleAlpha > 0) {
+      const auraColor = buffed ? 0xffd060 : style.auraColor;
+      const auraAlpha = buffed
+        ? style.auraBuffAlpha
+        : this.snake.boosting
+          ? style.auraBoostAlpha
+          : style.auraIdleAlpha;
       this.headAura.visible = true;
       this.headAura.clear();
       for (let i = 0; i < Math.min(8, this.snake.segs.length - 1); i++) {
-        const alpha = (1 - i / 8) * (this.snake.boosting ? 0.13 : 0.09);
-        this.headAura.lineStyle(CFG.SR * 3.6 * (1 - i * 0.09), auraColor, alpha);
+        const alpha = (1 - i / 8) * auraAlpha;
+        this.headAura.lineStyle(style.auraWidth * (1 - i * 0.09), auraColor, alpha);
         this.headAura.moveTo(this.snake.segs[i].x, this.snake.segs[i].y);
         this.headAura.lineTo(this.snake.segs[i + 1].x, this.snake.segs[i + 1].y);
       }
@@ -311,7 +441,7 @@ export class SnakeBody {
       const style = getSegmentStyle(this.snake, i, t, buffed, rainbowPhase);
       sprite.visible = true;
       sprite.position.set(seg.x, seg.y);
-      sprite.scale.set(0.68 + 0.32 * t);
+      sprite.scale.set(style.scale);
       sprite.tint = hitMix > 0 ? mixHex(style.tint, 0xff5a66, hitMix) : style.tint;
       sprite.alpha = style.alpha;
     }

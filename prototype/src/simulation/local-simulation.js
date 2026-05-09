@@ -18,6 +18,8 @@ export class LocalSimulation {
       onFlash: () => {},
       onSpeedBuff: () => {},
       onKillFeed: () => {},
+      onShake: () => {},
+      onImpact: () => {},
       ...events,
     };
 
@@ -198,11 +200,15 @@ export class LocalSimulation {
     if (snake.dead) return;
 
     const headOn = this.isHeadOnCollision(snake, killer);
+    const impactTicks = headOn ? 5 : 3;
+    const impactPower = headOn ? 0.36 : 0.2;
     snake.dead = true;
     snake.boosting = false;
     if (snake.body?.setVisible) snake.body.setVisible(false);
     this.effects.spawnDeathFragments(snake);
     this.effects.burst(snake.head.x, snake.head.y, hslHex(snake.skin.hue, 100, 62), 24, 5.5, 15, 5.5);
+    this.events.onShake(impactTicks + 1, impactPower);
+    this.events.onImpact(impactTicks);
     if (headOn) {
       const midX = (snake.head.x + killer.head.x) / 2;
       const midY = (snake.head.y + killer.head.y) / 2;
