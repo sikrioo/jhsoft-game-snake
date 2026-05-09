@@ -8,6 +8,11 @@ export class GameUI {
       sbuff: doc.getElementById("sbuff"),
       hLen: doc.getElementById("hLen"),
       hScr: doc.getElementById("hScr"),
+      survHud: doc.getElementById("survHud"),
+      survTotal: doc.getElementById("survTotal"),
+      survWave: doc.getElementById("survWave"),
+      survWaveTime: doc.getElementById("survWaveTime"),
+      survBots: doc.getElementById("survBots"),
       bpct: doc.getElementById("bpct"),
       bfil: doc.getElementById("bfil"),
       sbtrk: doc.getElementById("sbtrk"),
@@ -15,19 +20,36 @@ export class GameUI {
       lbr: doc.getElementById("lbr"),
       mmc: doc.getElementById("mmc"),
       kf: doc.getElementById("kf"),
+      alertBanner: doc.getElementById("alertBanner"),
       ss: doc.getElementById("ss"),
+      setupSub: doc.getElementById("setupSub"),
+      introStep: doc.getElementById("introStep"),
+      skinStep: doc.getElementById("skinStep"),
+      modeGrid: doc.getElementById("modeGrid"),
+      modeNote: doc.getElementById("modeNote"),
+      skinModeNote: doc.getElementById("skinModeNote"),
+      setupMeta: doc.getElementById("setupMeta"),
       ds: doc.getElementById("ds"),
+      dTitleGlow: doc.getElementById("dTitleGlow"),
+      dTitle: doc.getElementById("dTitle"),
+      dSub: doc.getElementById("dSub"),
       dLen: doc.getElementById("dLen"),
+      dLenLabel: doc.getElementById("dLenLabel"),
       dScr: doc.getElementById("dScr"),
+      dScrLabel: doc.getElementById("dScrLabel"),
       dKil: doc.getElementById("dKil"),
+      dKilLabel: doc.getElementById("dKilLabel"),
       skinGrid: doc.getElementById("skinGrid"),
       nameInput: doc.getElementById("nameInput"),
+      nextBtn: doc.getElementById("nextBtn"),
+      backBtn: doc.getElementById("backBtn"),
       startBtn: doc.getElementById("startBtn"),
       retryBtn: doc.getElementById("retryBtn"),
     };
     this.mmx = this.dom.mmc.getContext("2d");
     this.flashTO = null;
     this.speedBuffTO = null;
+    this.alertTO = null;
   }
 
   moveCursor(x, y) {
@@ -65,6 +87,22 @@ export class GameUI {
     this.dom.lbr.innerHTML = all.slice(0, 8).map((entry, index) => (
       `<div class="lr${entry.me ? " me" : ""}"><span class="lrk">#${index + 1}</span><span class="lrn">${entry.name}</span><span class="lrs">${entry.len}</span></div>`
     )).join("");
+  }
+
+  updateSurvivalHUD({ totalTime, waveLabel, waveTime, botCount }) {
+    if (!this.dom.survHud) return;
+    this.dom.survTotal.textContent = totalTime;
+    this.dom.survWave.textContent = waveLabel;
+    this.dom.survWaveTime.textContent = waveTime;
+    this.dom.survBots.textContent = `${botCount}`;
+  }
+
+  showSurvivalHUD() {
+    this.dom.survHud?.classList.remove("h");
+  }
+
+  hideSurvivalHUD() {
+    this.dom.survHud?.classList.add("h");
   }
 
   drawMinimap({ cfg, foods, stars, bots, player, cam, viewport }) {
@@ -161,14 +199,43 @@ export class GameUI {
   }
 
   showDeathScreen({ player, score, kills }) {
+    if (this.dom.dTitleGlow) this.dom.dTitleGlow.textContent = "DEAD";
+    if (this.dom.dTitle) this.dom.dTitle.textContent = "DEAD";
+    if (this.dom.dSub) this.dom.dSub.textContent = "The snake has been destroyed";
     this.dom.dLen.textContent = player?.len || 0;
     this.dom.dScr.textContent = score;
     this.dom.dKil.textContent = kills;
+    if (this.dom.dLenLabel) this.dom.dLenLabel.textContent = "FINAL LENGTH";
+    if (this.dom.dScrLabel) this.dom.dScrLabel.textContent = "SCORE";
+    if (this.dom.dKilLabel) this.dom.dKilLabel.textContent = "KILLS";
+    this.dom.ds.classList.remove("h");
+  }
+
+  showResultScreen({ title, subtitle, stats }) {
+    if (this.dom.dTitleGlow) this.dom.dTitleGlow.textContent = title;
+    if (this.dom.dTitle) this.dom.dTitle.textContent = title;
+    if (this.dom.dSub) this.dom.dSub.textContent = subtitle;
+    if (stats?.[0]) {
+      this.dom.dLen.textContent = stats[0].value;
+      this.dom.dLenLabel.textContent = stats[0].label;
+    }
+    if (stats?.[1]) {
+      this.dom.dScr.textContent = stats[1].value;
+      this.dom.dScrLabel.textContent = stats[1].label;
+    }
+    if (stats?.[2]) {
+      this.dom.dKil.textContent = stats[2].value;
+      this.dom.dKilLabel.textContent = stats[2].label;
+    }
     this.dom.ds.classList.remove("h");
   }
 
   hideStartScreen() {
     this.dom.ss.classList.add("h");
+  }
+
+  showStartScreen() {
+    this.dom.ss.classList.remove("h");
   }
 
   focusNameInput() {
@@ -186,10 +253,69 @@ export class GameUI {
   resetTransientUI() {
     this.dom.sbtrk.style.display = "none";
     this.setMotionBlur(false);
+    this.hideSurvivalHUD();
+    this.hideAlertBanner();
   }
 
   clearKillFeed() {
     this.dom.kf.innerHTML = "";
+  }
+
+  setSetupStep(step) {
+    const introOn = step === "intro";
+    this.dom.introStep?.classList.toggle("h", !introOn);
+    this.dom.skinStep?.classList.toggle("h", introOn);
+  }
+
+  setSetupSubtitle(text) {
+    if (this.dom.setupSub) this.dom.setupSub.textContent = text;
+  }
+
+  setSetupMeta(text) {
+    if (this.dom.setupMeta) this.dom.setupMeta.textContent = text;
+  }
+
+  setModeNote(text = "", variant = "") {
+    for (const el of [this.dom.modeNote, this.dom.skinModeNote]) {
+      if (!el) continue;
+      el.textContent = text;
+      el.classList.toggle("warn", variant === "warn");
+    }
+  }
+
+  setStartButtonState({ label, disabled }) {
+    if (!this.dom.startBtn) return;
+    this.dom.startBtn.textContent = label;
+    this.dom.startBtn.disabled = Boolean(disabled);
+  }
+
+  showAlertBanner(text, variant = "warn", duration = 1900) {
+    if (!this.dom.alertBanner) return;
+    this.dom.alertBanner.textContent = text;
+    this.dom.alertBanner.classList.remove("warn", "danger");
+    this.dom.alertBanner.classList.add("on");
+    if (variant) this.dom.alertBanner.classList.add(variant);
+    clearTimeout(this.alertTO);
+    this.alertTO = setTimeout(() => this.hideAlertBanner(), duration);
+  }
+
+  hideAlertBanner() {
+    if (!this.dom.alertBanner) return;
+    this.dom.alertBanner.classList.remove("on", "warn", "danger");
+  }
+
+  renderModes(modes, selectedMode, onSelect) {
+    this.dom.modeGrid.innerHTML = modes.map((mode) => `
+      <div class="modeCard${mode.id === selectedMode ? " on" : ""}${mode.comingSoon ? " coming" : ""}" data-id="${mode.id}">
+        <div class="modeName">${mode.name}</div>
+        <div class="modeDesc">${mode.desc}</div>
+        <div class="modeTag">${mode.tag}</div>
+      </div>
+    `).join("");
+
+    this.dom.modeGrid.querySelectorAll(".modeCard").forEach((card) => {
+      card.addEventListener("click", () => onSelect(card.dataset.id));
+    });
   }
 
   renderSkins(skins, selectedSkin, onSelect) {

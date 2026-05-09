@@ -41,6 +41,7 @@ export class Food {
   }
 
   tick(frameId = 0) {
+    if (this.sp) this.sp.position.set(this.x, this.y);
     const stride = this.tickStride;
     if (stride > 1 && frameId % stride !== this.tickOffset) return;
 

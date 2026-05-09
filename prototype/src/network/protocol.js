@@ -1,5 +1,6 @@
 export const SESSION_MODES = {
   LOCAL: "local",
+  SURVIVAL: "survival",
   ONLINE: "online",
 };
 

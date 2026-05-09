@@ -50,8 +50,6 @@ export class OnlineSession {
   attach() {
     this.input.attach();
     this.ui.moveCursor(innerWidth / 2, innerHeight / 2);
-    this.ui.focusNameInput();
-    this.ui.dom.startBtn.addEventListener("click", () => this.start());
     this.ui.dom.retryBtn.addEventListener("click", () => this.start());
   }
 

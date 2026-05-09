@@ -5,6 +5,19 @@ function buildHueRamp(saturation, lightness) {
   return Array.from({ length: 360 }, (_, hue) => hslHex(hue, saturation, lightness));
 }
 
+function mixHex(a, b, t) {
+  const ar = (a >> 16) & 0xff;
+  const ag = (a >> 8) & 0xff;
+  const ab = a & 0xff;
+  const br = (b >> 16) & 0xff;
+  const bg = (b >> 8) & 0xff;
+  const bb = b & 0xff;
+  const mr = Math.round(ar + (br - ar) * t);
+  const mg = Math.round(ag + (bg - ag) * t);
+  const mb = Math.round(ab + (bb - ab) * t);
+  return (mr << 16) | (mg << 8) | mb;
+}
+
 const ZEBRA_PLAYER_TINTS = [
   hslHex(220, 18, 92),
   hslHex(220, 18, 92),
@@ -48,6 +61,13 @@ function getSegmentStyle(snake, bodyIndex, t, buffed, rainbowPhase) {
     };
   }
 
+  if (snake.skin.pattern === "zombie") {
+    return {
+      tint: hslHex(108, snake.isPlayer ? 44 : 36, snake.isPlayer ? 38 + t * 14 : 28 + t * 12),
+      alpha: 0.72 + t * 0.18,
+    };
+  }
+
   if (snake.skin.pattern === "zebra") {
     return {
       tint: snake.isPlayer ? ZEBRA_PLAYER_TINTS[bodyIndex % 4] : ZEBRA_BOT_TINTS[bodyIndex % 4],
@@ -68,6 +88,8 @@ function getHeadStyle(snake, buffed, now) {
       ? Math.floor((now * 0.12) % 360)
       : snake.skin.pattern === "ghost"
         ? 188
+        : snake.skin.pattern === "zombie"
+          ? 108
         : snake.skin.pattern === "zebra"
           ? 220
           : snake.skin.hue;
@@ -86,15 +108,15 @@ function getHeadStyle(snake, buffed, now) {
   }
 
   return {
-    shadowTint: hslHex(hue, snake.skin.pattern === "ghost" ? 24 : 70, snake.skin.pattern === "ghost" ? 18 : snake.skin.pattern === "zebra" ? 8 : 10),
-    shadowAlpha: snake.skin.pattern === "ghost" ? 0.32 : 0.55,
+      shadowTint: hslHex(hue, snake.skin.pattern === "ghost" ? 24 : 70, snake.skin.pattern === "ghost" ? 18 : snake.skin.pattern === "zebra" ? 8 : 10),
+    shadowAlpha: snake.skin.pattern === "ghost" ? 0.32 : snake.skin.pattern === "zombie" ? 0.42 : 0.55,
     baseTint: hslHex(
       hue,
-      snake.skin.pattern === "ghost" ? 38 : snake.skin.pattern === "zebra" ? 14 : 88,
-      snake.skin.pattern === "ghost" ? 86 : snake.skin.pattern === "zebra" ? 92 : snake.isPlayer ? 63 : 52
+      snake.skin.pattern === "ghost" ? 38 : snake.skin.pattern === "zebra" ? 14 : snake.skin.pattern === "zombie" ? 40 : 88,
+      snake.skin.pattern === "ghost" ? 86 : snake.skin.pattern === "zebra" ? 92 : snake.skin.pattern === "zombie" ? (snake.isPlayer ? 58 : 46) : snake.isPlayer ? 63 : 52
     ),
-    baseAlpha: snake.skin.pattern === "ghost" ? 0.72 : 1,
-    glossAlpha: snake.skin.pattern === "ghost" ? 0.4 : snake.isPlayer ? 0.27 : 0.16,
+    baseAlpha: snake.skin.pattern === "ghost" ? 0.72 : snake.skin.pattern === "zombie" ? 0.96 : 1,
+    glossAlpha: snake.skin.pattern === "ghost" ? 0.4 : snake.skin.pattern === "zombie" ? 0.1 : snake.isPlayer ? 0.27 : 0.16,
     stripeVisible: snake.skin.pattern === "zebra",
     stripeAlpha: 0.92,
     mood: snake.skin.mood,
@@ -278,6 +300,8 @@ export class SnakeBody {
     const invBodyCount = 1 / Math.max(1, bodyCount - 1);
     const now = Date.now();
     const rainbowPhase = Math.floor((now * 0.08) % 360);
+    const hitMix = this.snake.hitFlashTicks > 0 ? Math.min(0.55, this.snake.hitFlashTicks / 12) : 0;
+    if (this.snake.hitFlashTicks > 0) this.snake.hitFlashTicks--;
 
     for (let i = 0; i < bodyCount; i++) {
       const segIdx = segs.length - 1 - i;
@@ -288,11 +312,16 @@ export class SnakeBody {
       sprite.visible = true;
       sprite.position.set(seg.x, seg.y);
       sprite.scale.set(0.68 + 0.32 * t);
-      sprite.tint = style.tint;
+      sprite.tint = hitMix > 0 ? mixHex(style.tint, 0xff5a66, hitMix) : style.tint;
       sprite.alpha = style.alpha;
     }
 
     this.updateHead(buffed, now);
+
+    if (hitMix > 0) {
+      this.headBase.tint = mixHex(this.headBase.tint, 0xff6a6a, hitMix);
+      this.headShadow.tint = mixHex(this.headShadow.tint, 0x6b1118, Math.min(0.45, hitMix));
+    }
 
     if (this.nameText) {
       const head = segs[0];

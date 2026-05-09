@@ -38,7 +38,7 @@ class Particle {
 }
 
 class DeathFrag {
-  constructor({ x, y, hue, layerFX, textures, spawnFood }) {
+  constructor({ x, y, hue, layerFX, textures, spawnFood, foodDropChance = 0.7 }) {
     const angle = Math.random() * Math.PI * 2;
     const speed = rnd(2, 7);
     this.x = x;
@@ -49,6 +49,7 @@ class DeathFrag {
     this.maxLife = this.life;
     this.foodDropped = false;
     this.spawnFood = spawnFood;
+    this.foodDropChance = foodDropChance;
     this.sp = layerFX && textures && typeof PIXI !== "undefined"
       ? new PIXI.Sprite(textures.getSegTex(rndI(4, 10)))
       : null;
@@ -68,7 +69,9 @@ class DeathFrag {
 
     if (!this.foodDropped && t < 0.45) {
       this.foodDropped = true;
-      if (Math.random() < 0.7) this.spawnFood(this.x + rnd(-5, 5), this.y + rnd(-5, 5), { ignoreSoftCap: true });
+      if (this.foodDropChance > 0 && Math.random() < this.foodDropChance) {
+        this.spawnFood(this.x + rnd(-5, 5), this.y + rnd(-5, 5), { ignoreSoftCap: true });
+      }
     }
 
     if (this.sp) {
@@ -150,8 +153,11 @@ export class EffectsSystem {
     this.burst(x, y, 0xffffff, 18, 5.5, 12, 4.5);
   }
 
-  spawnDeathFragments(snake) {
-    const stride = snake.segs.length > 120 ? 3 : snake.segs.length > 60 ? 2 : 1;
+  spawnDeathFragments(snake, options = {}) {
+    const foodDropChance = options.foodDropChance ?? 0.7;
+    const baseStride = snake.segs.length > 120 ? 3 : snake.segs.length > 60 ? 2 : 1;
+    const strideMultiplier = Math.max(1, options.strideMultiplier ?? 1);
+    const stride = baseStride * strideMultiplier;
     for (let i = 0; i < snake.segs.length; i += stride) {
       this.frags.push(new DeathFrag({
         x: snake.segs[i].x,
@@ -160,6 +166,7 @@ export class EffectsSystem {
         layerFX: this.layerFX,
         textures: this.textures,
         spawnFood: this.spawnFood,
+        foodDropChance,
       }));
     }
   }

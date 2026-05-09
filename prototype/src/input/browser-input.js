@@ -40,4 +40,12 @@ export class BrowserInputController {
   getState() {
     return { ...this.state };
   }
+
+  reset() {
+    this.state.pointerX = innerWidth / 2;
+    this.state.pointerY = innerHeight / 2;
+    this.state.boostHeld = false;
+    this.state.boostToggle = false;
+    if (this.onPointerMove) this.onPointerMove(this.state.pointerX, this.state.pointerY);
+  }
 }

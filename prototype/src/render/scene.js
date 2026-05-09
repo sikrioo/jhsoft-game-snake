@@ -21,6 +21,7 @@ export function createScene() {
 
   const layers = {
     background: new PIXI.Graphics(),
+    gates: new PIXI.Container(),
     food: new PIXI.Container(),
     bodies: new PIXI.Container(),
     fx: new PIXI.Container(),
@@ -28,7 +29,7 @@ export function createScene() {
     names: new PIXI.Container(),
   };
 
-  world.addChild(layers.background, layers.food, layers.bodies, layers.fx, layers.heads, layers.names);
+  world.addChild(layers.background, layers.gates, layers.food, layers.bodies, layers.fx, layers.heads, layers.names);
 
   addEventListener("resize", () => {
     width = innerWidth;

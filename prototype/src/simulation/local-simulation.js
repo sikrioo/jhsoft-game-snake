@@ -7,6 +7,8 @@ import { Snake } from "../entities/snake.js";
 import { createPlayerCommand } from "../network/protocol.js";
 import { EffectsSystem } from "../systems/effects-system.js";
 
+const START_SPAWN_PROTECTION_TICKS = 45;
+
 export class LocalSimulation {
   constructor({ renderContext, selectedSkinRef, playerNameRef, events = {} }) {
     this.renderContext = renderContext;
@@ -71,12 +73,15 @@ export class LocalSimulation {
       renderContext: this.renderContext,
       spawnFood: (x, y, options) => this.spawnFood(x, y, options),
     });
+    this.player.spawnProtectionTicks = START_SPAWN_PROTECTION_TICKS;
 
     for (let i = 0; i < CFG.BOT_N; i++) {
-      this.bots.push(new Bot({
+      const bot = new Bot({
         renderContext: this.renderContext,
         spawnFood: (x, y, options) => this.spawnFood(x, y, options),
-      }));
+      });
+      bot.spawnProtectionTicks = START_SPAWN_PROTECTION_TICKS;
+      this.bots.push(bot);
     }
 
     this.refill();
@@ -135,12 +140,34 @@ export class LocalSimulation {
     return Boolean(killer?.head && dist(snake.head.x, snake.head.y, killer.head.x, killer.head.y) < CFG.SR * 2.8);
   }
 
+  attractNearbyFoodsToPlayer() {
+    if (!this.player || this.player.dead) return;
+    const px = this.player.head.x;
+    const py = this.player.head.y;
+    const radius = CFG.FOOD_ATTRACT_RADIUS;
+    const nearbyFoods = this.foodsGrid.near(px, py, radius);
+
+    for (const food of nearbyFoods) {
+      if (!food || food.type !== "normal") continue;
+      const dx = px - food.x;
+      const dy = py - food.y;
+      const d = Math.hypot(dx, dy);
+      if (d <= 1 || d > radius) continue;
+      const pullT = 1 - d / radius;
+      const step = 0.45 + pullT * CFG.FOOD_ATTRACT_PULL;
+      food.x += (dx / d) * step;
+      food.y += (dy / d) * step;
+    }
+  }
+
   eatFoods() {
     if (!this.player || this.player.dead) return;
 
     const px = this.player.head.x;
     const py = this.player.head.y;
     const pr = CFG.SR;
+
+    this.attractNearbyFoodsToPlayer();
 
     for (let i = this.foods.length - 1; i >= 0; i--) {
       const food = this.foods[i];
@@ -204,10 +231,12 @@ export class LocalSimulation {
       const index = this.bots.indexOf(snake);
       if (index === -1) return;
       snake.destroy();
-      this.bots[index] = new Bot({
+      const bot = new Bot({
         renderContext: this.renderContext,
         spawnFood: (x, y, options) => this.spawnFood(x, y, options),
       });
+      bot.spawnProtectionTicks = START_SPAWN_PROTECTION_TICKS;
+      this.bots[index] = bot;
     }, 4000);
   }
 
@@ -218,6 +247,7 @@ export class LocalSimulation {
       const nearbySegments = this.segmentsGrid.near(snake.head.x, snake.head.y, CFG.SR * 5);
       for (const { seg, own } of nearbySegments) {
         if (own === snake) continue;
+        if (snake.spawnProtectionTicks > 0 || own?.spawnProtectionTicks > 0) continue;
         if (dist(snake.head.x, snake.head.y, seg.x, seg.y) < CFG.SR * 2) {
           this.die(snake, own);
           break;
@@ -271,6 +301,7 @@ export class LocalSimulation {
       this.boostE = Math.min(100, this.boostE + CFG.BST_E_REGEN);
     }
 
+    if (this.player.spawnProtectionTicks > 0) this.player.spawnProtectionTicks--;
     this.player.move();
     this.eatFoods();
     if (Math.hypot(this.player.head.x, this.player.head.y) > CFG.WR) this.die(this.player, { name: "WALL" });
@@ -288,6 +319,7 @@ export class LocalSimulation {
 
   updateBots() {
     for (const bot of this.bots) {
+      if (bot.spawnProtectionTicks > 0) bot.spawnProtectionTicks--;
       bot.update({ foodsGrid: this.foodsGrid, stars: this.stars, player: this.player });
       if (!bot.dead && Math.hypot(bot.head.x, bot.head.y) > CFG.WR) this.die(bot, { name: "WALL" });
     }

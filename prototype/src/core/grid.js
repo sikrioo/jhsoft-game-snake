@@ -5,7 +5,9 @@ export class Grid {
   }
 
   key(x, y) {
-    return `${(x / this.cellSize) | 0},${(y / this.cellSize) | 0}`;
+    const cx = (x / this.cellSize) | 0;
+    const cy = (y / this.cellSize) | 0;
+    return (cx + 4096) * 8192 + (cy + 4096);
   }
 
   add(x, y, data) {
@@ -22,7 +24,7 @@ export class Grid {
 
     for (let dx = -range; dx <= range; dx++) {
       for (let dy = -range; dy <= range; dy++) {
-        const bucket = this.map.get(`${cx + dx},${cy + dy}`);
+        const bucket = this.map.get((cx + dx + 4096) * 8192 + (cy + dy + 4096));
         if (!bucket) continue;
         for (const item of bucket) results.push(item);
       }

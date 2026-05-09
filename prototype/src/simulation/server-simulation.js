@@ -222,6 +222,26 @@ export class ServerSimulation {
     return Boolean(killerSnake?.head && dist(snake.head.x, snake.head.y, killerSnake.head.x, killerSnake.head.y) < CFG.SR * 2.8);
   }
 
+  attractNearbyFoodsToSnake(snake) {
+    if (!snake || snake.dead) return;
+    const px = snake.head.x;
+    const py = snake.head.y;
+    const radius = CFG.FOOD_ATTRACT_RADIUS;
+    const nearbyFoods = this.foodsGrid.near(px, py, radius);
+
+    for (const food of nearbyFoods) {
+      if (!food || food.type !== "normal") continue;
+      const dx = px - food.x;
+      const dy = py - food.y;
+      const d = Math.hypot(dx, dy);
+      if (d <= 1 || d > radius) continue;
+      const pullT = 1 - d / radius;
+      const step = 0.45 + pullT * CFG.FOOD_ATTRACT_PULL;
+      food.x += (dx / d) * step;
+      food.y += (dy / d) * step;
+    }
+  }
+
   getLivingPlayerStates() {
     return [...this.players.values()].filter((player) => player.snake && !player.snake.dead);
   }
@@ -233,6 +253,8 @@ export class ServerSimulation {
     const px = snake.head.x;
     const py = snake.head.y;
     const pr = CFG.SR;
+
+    this.attractNearbyFoodsToSnake(snake);
 
     for (let i = this.foods.length - 1; i >= 0; i--) {
       const food = this.foods[i];

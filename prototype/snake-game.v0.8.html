@@ -21,40 +21,66 @@
   </div>
   <div class="hc"><div class="hl">Score</div><div class="hv" id="hScr">0</div></div>
 </div>
+<div id="survHud" class="h">
+  <div class="shc"><div class="shl">Total</div><div class="shv" id="survTotal">10:00</div></div>
+  <div class="shc"><div class="shl">Wave</div><div class="shv" id="survWave">WAVE 1</div></div>
+  <div class="shc"><div class="shl">Wave Time</div><div class="shv" id="survWaveTime">02:00</div></div>
+  <div class="shc"><div class="shl">Bots</div><div class="shv" id="survBots">0</div></div>
+</div>
 <div id="lb"><div class="lt">Leaderboard</div><div id="lbr"></div></div>
 <div id="mm"><canvas id="mmc" width="148" height="148"></canvas></div>
 <div id="kf"></div>
+<div id="alertBanner"></div>
 
 <div id="ss" class="scr">
   <div class="lw"><div class="lgw">SLITHER</div><div class="lg">SLITHER</div></div>
-  <div class="ls">SINGLE PLAYER PROTOTYPE</div>
+  <div class="ls" id="setupSub">CHOOSE MODE AND NICKNAME</div>
   <div class="cg">
     <span class="ck">MOUSE</span><span>Direction</span>
     <span class="ck">CLICK / SPACE</span><span>Boost</span>
     <span class="ck">Q</span><span>Toggle boost</span>
     <span class="ck" style="color:var(--accent3)">STAR</span><span>Temporary speed buff</span>
   </div>
-  <div class="skinBox" style="max-width:360px;margin-bottom:18px;">
-    <div class="skinTitle">Nickname</div>
-    <input id="nameInput" type="text" maxlength="16" placeholder="PLAYER" autocomplete="off">
+
+  <div class="flowStep" id="introStep">
+    <div class="skinBox" style="max-width:360px;margin-bottom:18px;">
+      <div class="skinTitle">Nickname</div>
+      <input id="nameInput" type="text" maxlength="16" placeholder="PLAYER" autocomplete="off">
+    </div>
+    <div class="skinBox">
+      <div class="skinTitle">Select Mode</div>
+      <div class="modeGrid" id="modeGrid"></div>
+      <div class="modeNote" id="modeNote"></div>
+    </div>
+    <div class="setupActions">
+      <button class="btn" id="nextBtn">NEXT</button>
+    </div>
   </div>
-  <div class="skinBox">
-    <div class="skinTitle">Select Skin</div>
-    <div class="skinGrid" id="skinGrid"></div>
+
+  <div class="flowStep h" id="skinStep">
+    <div class="setupMeta" id="setupMeta"></div>
+    <div class="skinBox">
+      <div class="skinTitle">Select Skin</div>
+      <div class="skinGrid" id="skinGrid"></div>
+      <div class="modeNote" id="skinModeNote"></div>
+    </div>
+    <div class="setupActions">
+      <button class="btn alt" id="backBtn">BACK</button>
+      <button class="btn" id="startBtn">START</button>
+    </div>
   </div>
-  <button class="btn" id="startBtn">PLAY</button>
 </div>
 
 <div id="ds" class="scr h">
   <div class="lw">
-    <div class="lgw" style="color:#ff3c5a">DEAD</div>
-    <div class="lg" style="background:linear-gradient(135deg,#ff3c5a,#ff8060,#ff3c5a);background-size:200%;-webkit-background-clip:text;background-clip:text">DEAD</div>
+    <div class="lgw" id="dTitleGlow" style="color:#ff3c5a">DEAD</div>
+    <div class="lg" id="dTitle" style="background:linear-gradient(135deg,#ff3c5a,#ff8060,#ff3c5a);background-size:200%;-webkit-background-clip:text;background-clip:text">DEAD</div>
   </div>
-  <div class="ls" style="margin-bottom:26px">The snake has been destroyed</div>
+  <div class="ls" id="dSub" style="margin-bottom:26px">The snake has been destroyed</div>
   <div class="sr">
-    <div class="sb"><div class="sv r" id="dLen">0</div><div class="sl">FINAL LENGTH</div></div>
-    <div class="sb"><div class="sv" id="dScr">0</div><div class="sl">SCORE</div></div>
-    <div class="sb"><div class="sv" id="dKil">0</div><div class="sl">KILLS</div></div>
+    <div class="sb"><div class="sv r" id="dLen">0</div><div class="sl" id="dLenLabel">FINAL LENGTH</div></div>
+    <div class="sb"><div class="sv" id="dScr">0</div><div class="sl" id="dScrLabel">SCORE</div></div>
+    <div class="sb"><div class="sv" id="dKil">0</div><div class="sl" id="dKilLabel">KILLS</div></div>
   </div>
   <button class="btn" id="retryBtn">RETRY</button>
 </div>

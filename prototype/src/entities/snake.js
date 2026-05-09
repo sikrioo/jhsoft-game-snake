@@ -15,6 +15,9 @@ export function enrichSkin(skin) {
   } else if (enriched.id === "ghost") {
     enriched.pattern = "ghost";
     enriched.mood = "smile";
+  } else if (enriched.id === "zombie") {
+    enriched.pattern = "zombie";
+    enriched.mood = "angry";
   } else if (enriched.id === "viper") {
     enriched.mood = "angry";
   } else if (enriched.id === "jade") {
@@ -26,7 +29,7 @@ export function enrichSkin(skin) {
 }
 
 export class Snake {
-  constructor({ x, y, len, skin, name = "", isPlayer = false, showNameTag, renderContext, spawnFood }) {
+  constructor({ x, y, len, skin, name = "", isPlayer = false, showNameTag, renderContext, spawnFood, angle }) {
     this.name = name;
     this.skin = enrichSkin(skin);
     this.isPlayer = isPlayer;
@@ -35,8 +38,9 @@ export class Snake {
     this.dead = false;
     this.speedBuff = 0;
     this.boosting = false;
+    this.hitFlashTicks = 0;
     this.compactDropCarry = 0;
-    this.angle = rnd(0, Math.PI * 2);
+    this.angle = angle ?? rnd(0, Math.PI * 2);
     this.segs = [];
 
     const gap = CFG.SR * 2 + CFG.SEG_GAP;
@@ -100,6 +104,10 @@ export class Snake {
   shrink(n = 1, options = {}) {
     for (let i = 0; i < n && this.segs.length > CFG.MIN_LEN; i++) {
       const tail = this.segs.pop();
+      if (options.skipDrop) {
+        this.compactDropCarry = 0;
+        continue;
+      }
       const prevTail = this.segs[this.segs.length - 1] || tail;
       const dx = tail.x - prevTail.x;
       const dy = tail.y - prevTail.y;

@@ -8,6 +8,7 @@ export const SKINS = [
   { id: "void", name: "VOID", hue: 265, hex: 0xa78bfa, css: "#a78bfa", desc: "Deep violet shell", sp: "#a78bfa" },
   { id: "sunset", name: "SUNSET", hue: 22, hex: 0xfb923c, css: "#fb923c", desc: "Orange dusk glow", sp: "#fb923c" },
   { id: "ghost", name: "GHOST", hue: 190, hex: 0xccfbf1, css: "#ccfbf1", desc: "Soft translucent body", sp: "linear-gradient(90deg,rgba(204,251,241,.5),rgba(204,251,241,.9))" },
+  { id: "zombie", name: "ZOMBIE", hue: 108, hex: 0x7ddf5f, css: "#7ddf5f", desc: "Undead survival hunter", sp: "linear-gradient(90deg,#415a31,#7ddf5f,#b7f58a)" },
   { id: "rainbow", name: "RAINBOW", hue: 0, hex: 0xff3c5a, css: "#ff3c5a", desc: "Prismatic color cycle", sp: "linear-gradient(90deg,#ff3c5a,#ffd060,#4ade80,#00d4ff,#a78bfa)" },
   { id: "zebra", name: "ZEBRA", hue: 220, hex: 0xdbeafe, css: "#dbeafe", desc: "Striped monochrome", sp: "repeating-linear-gradient(90deg,#e5e7eb 0 8px,#1a1a2e 8px 14px)" },
   { id: "lava", name: "LAVA", hue: 15, hex: 0xff6030, css: "#ff6030", desc: "Molten heat pattern", sp: "linear-gradient(90deg,#ff6030,#ff3c5a,#ffd060)" },
