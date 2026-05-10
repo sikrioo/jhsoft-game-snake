@@ -84,8 +84,8 @@ function getHeadFeatureLayout(snake) {
   if (snake.skin.pattern === "jelly") {
     return {
       headScale: 1.04,
-      eyeForward: CFG.SR * 0.12,
-      eyeOffset: CFG.SR * 0.36,
+      eyeForward: -CFG.SR * 0.1,
+      eyeOffset: CFG.SR * 0.34,
       pupilForward: CFG.SR * 0.1,
       eyeScale: 0.9,
       pupilScale: 0.8,
@@ -94,9 +94,10 @@ function getHeadFeatureLayout(snake) {
       glossY: -CFG.SR * 0.34,
       glossScaleX: 1.18,
       glossScaleY: 0.94,
-      mouthX: CFG.SR * 0.18,
-      mouthY: CFG.SR * 0.42,
-      mouthScale: 0.82,
+      mouthX: -CFG.SR * 0.02,
+      mouthY: CFG.SR * 0.3,
+      mouthScale: 0.74,
+      faceUpright: true,
     };
   }
 
@@ -116,6 +117,7 @@ function getHeadFeatureLayout(snake) {
       mouthX: CFG.SR * 0.98,
       mouthY: 0,
       mouthScale: 1,
+      faceUpright: false,
     };
   }
 
@@ -134,6 +136,7 @@ function getHeadFeatureLayout(snake) {
     mouthX: CFG.SR * 0.98,
     mouthY: 0,
     mouthScale: 1,
+    faceUpright: false,
   };
 }
 
@@ -585,6 +588,7 @@ export class SnakeBody {
     const eyeTint = style.eyeTint ?? 0xffffff;
     const mouthTint = style.mouthTint ?? 0x04080f;
     const headBob = headWave * motion.headBobAmp;
+    const faceRotation = featureLayout.faceUpright ? -this.snake.angle : 0;
 
     this.headContainer.position.set(
       head.x + Math.cos(this.snake.angle) * headBob,
@@ -608,10 +612,16 @@ export class SnakeBody {
     this.rightEye.tint = eyeMode === "happy_closed" ? eyeTint : 0xffffff;
     this.leftEye.position.set(featureLayout.eyeForward, -featureLayout.eyeOffset);
     this.rightEye.position.set(featureLayout.eyeForward, featureLayout.eyeOffset);
+    this.leftEye.rotation = faceRotation;
+    this.rightEye.rotation = faceRotation;
     this.leftPupil.position.set(featureLayout.eyeForward + featureLayout.pupilForward, -featureLayout.eyeOffset);
     this.rightPupil.position.set(featureLayout.eyeForward + featureLayout.pupilForward, featureLayout.eyeOffset);
+    this.leftPupil.rotation = faceRotation;
+    this.rightPupil.rotation = faceRotation;
     this.leftEyeSpark.position.set(featureLayout.eyeForward - CFG.SR * 0.04, -featureLayout.eyeOffset - CFG.SR * 0.09);
     this.rightEyeSpark.position.set(featureLayout.eyeForward - CFG.SR * 0.04, featureLayout.eyeOffset - CFG.SR * 0.09);
+    this.leftEyeSpark.rotation = faceRotation;
+    this.rightEyeSpark.rotation = faceRotation;
     this.leftEye.scale.set(featureLayout.eyeScale);
     this.rightEye.scale.set(featureLayout.eyeScale);
     this.leftPupil.scale.set(featureLayout.pupilScale);
@@ -625,6 +635,9 @@ export class SnakeBody {
     this.mouthSmile.position.set(featureLayout.mouthX, featureLayout.mouthY);
     this.mouthAngry.position.set(featureLayout.mouthX, featureLayout.mouthY);
     this.mouthBigSmile.position.set(featureLayout.mouthX, featureLayout.mouthY);
+    this.mouthSmile.rotation = faceRotation;
+    this.mouthAngry.rotation = faceRotation;
+    this.mouthBigSmile.rotation = faceRotation;
     this.mouthSmile.scale.set(featureLayout.mouthScale);
     this.mouthAngry.scale.set(featureLayout.mouthScale);
     this.mouthBigSmile.scale.set(featureLayout.mouthScale);
