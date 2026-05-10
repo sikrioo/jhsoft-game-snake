@@ -37,9 +37,9 @@ const RAINBOW_BOT_TINTS = buildHueRamp(72, 46);
 const RAINBOW_HEAD_BASE_PLAYER = buildHueRamp(88, 63);
 const RAINBOW_HEAD_BASE_BOT = buildHueRamp(88, 52);
 const RAINBOW_HEAD_SHADOW = buildHueRamp(70, 10);
-const SHORT_SNAKE_MAX_LEN = CFG.MIN_LEN + 16;
-const LONG_SNAKE_MIN_LEN = CFG.MIN_LEN + 32;
-const SHORT_SNAKE_TAIL_PORTION = 0.15;
+const SHORT_SNAKE_MAX_LEN = CFG.MIN_LEN + 18;
+const LONG_SNAKE_MIN_LEN = CFG.MIN_LEN + 36;
+const SHORT_SNAKE_TAIL_PORTION = 0.13;
 
 function clamp01(value) {
   return Math.max(0, Math.min(1, value));
@@ -66,14 +66,14 @@ function getBodyScaleProfile(length, t) {
   const tailT = smoothstep01(clampedT / SHORT_SNAKE_TAIL_PORTION);
   const bodyT = smoothstep01((clampedT - SHORT_SNAKE_TAIL_PORTION) / (1 - SHORT_SNAKE_TAIL_PORTION));
   const shortScale = clampedT <= SHORT_SNAKE_TAIL_PORTION
-    ? lerp(0.74, 0.91, tailT)
-    : lerp(0.91, 0.95, bodyT);
+    ? lerp(0.7, 0.86, tailT)
+    : lerp(0.86, 0.9, bodyT);
 
   return lerp(shortScale, legacyScale, getShortSnakeBlend(length));
 }
 
 function getHeadScaleProfile(length) {
-  return lerp(0.78, 1, getShortSnakeBlend(length));
+  return lerp(0.74, 1, getShortSnakeBlend(length));
 }
 
 function getZombieVariant(snake) {
