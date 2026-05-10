@@ -332,12 +332,13 @@ export class TextureStore {
     const key = `eye-happy-closed:${radius}`;
     if (this.cache.has(key)) return this.cache.get(key);
 
-    const size = radius * 2.8 + 8;
+    const size = radius * 2.5 + 8;
     const center = size / 2;
     const g = new PIXI.Graphics();
     g.lineStyle(Math.max(2, radius * 0.42), 0xffffff, 1);
-    g.moveTo(center - radius * 0.9, center + radius * 0.1);
-    g.quadraticCurveTo(center, center - radius * 0.78, center + radius * 0.9, center + radius * 0.1);
+    g.moveTo(center - radius * 0.88, center + radius * 0.36);
+    g.lineTo(center, center - radius * 0.42);
+    g.lineTo(center + radius * 0.88, center + radius * 0.36);
     g.lineStyle(0);
 
     const texture = this.app.renderer.generateTexture(g, { resolution: 1 });
@@ -371,10 +372,12 @@ export class TextureStore {
     const center = size / 2;
     const g = new PIXI.Graphics();
     g.beginFill(0xffffff, 1);
-    g.drawEllipse(center, center + radius * 0.16, radius * 0.44, radius * 0.3);
+    g.moveTo(center - radius * 0.4, center - radius * 0.04);
+    g.quadraticCurveTo(center, center + radius * 0.34, center + radius * 0.4, center - radius * 0.04);
+    g.quadraticCurveTo(center, center + radius * 0.04, center - radius * 0.4, center - radius * 0.04);
     g.endFill();
     g.beginFill(0xffffff, 0.32);
-    g.drawEllipse(center, center + radius * 0.02, radius * 0.18, radius * 0.07);
+    g.drawEllipse(center, center + radius * 0.04, radius * 0.15, radius * 0.06);
     g.endFill();
 
     const texture = this.app.renderer.generateTexture(g, { resolution: 1 });

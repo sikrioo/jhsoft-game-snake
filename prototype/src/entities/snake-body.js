@@ -84,8 +84,8 @@ function getHeadFeatureLayout(snake) {
   if (snake.skin.pattern === "jelly") {
     return {
       headScale: 1.04,
-      eyeForward: CFG.SR * 0.2,
-      eyeOffset: CFG.SR * 0.4,
+      eyeForward: CFG.SR * 0.12,
+      eyeOffset: CFG.SR * 0.36,
       pupilForward: CFG.SR * 0.1,
       eyeScale: 0.9,
       pupilScale: 0.8,
@@ -94,9 +94,9 @@ function getHeadFeatureLayout(snake) {
       glossY: -CFG.SR * 0.34,
       glossScaleX: 1.18,
       glossScaleY: 0.94,
-      mouthX: CFG.SR * 0.3,
-      mouthY: CFG.SR * 0.62,
-      mouthScale: 0.76,
+      mouthX: CFG.SR * 0.18,
+      mouthY: CFG.SR * 0.42,
+      mouthScale: 0.82,
     };
   }
 
@@ -393,7 +393,7 @@ function getHeadStyle(snake, buffed, now) {
       eyeMode: "happy_closed",
       eyeTint: 0x1b1b1b,
       mouthMode: "big_smile",
-      mouthTint: 0x4b2a1d,
+      mouthTint: 0xff91b6,
       auraColor: 0x9affb0,
       auraIdleAlpha: 0.035,
       auraBoostAlpha: 0.1,
