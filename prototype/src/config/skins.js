@@ -4,6 +4,8 @@ export const SKINS = [
     id: "happy_jelly_green",
     name: "HAPPY JELLY",
     type: "cute",
+    experimental: true,
+    statusTag: "WIP",
     hue: 126,
     hex: 0x59ff7a,
     css: "#59ff7a",

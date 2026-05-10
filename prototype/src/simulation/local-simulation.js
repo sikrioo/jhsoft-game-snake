@@ -212,6 +212,33 @@ export class LocalSimulation {
     }
   }
 
+  eatFoodsForBot(bot) {
+    if (!bot || bot.dead || bot.skin?.id === "zombie") return;
+
+    const px = bot.head.x;
+    const py = bot.head.y;
+    const pr = bot.radius ?? CFG.SR;
+
+    for (let i = this.foods.length - 1; i >= 0; i--) {
+      const food = this.foods[i];
+      if (dist(px, py, food.x, food.y) < pr + food.r) {
+        bot.grow(food.val);
+        if (Math.random() < 0.2) this.effects.burst(food.x, food.y, food.color, 4, 1.8, 12, 2.2);
+        this.removeFood(this.foods, i);
+      }
+    }
+
+    for (let i = this.stars.length - 1; i >= 0; i--) {
+      const star = this.stars[i];
+      if (dist(px, py, star.x, star.y) < pr + star.r + 2) {
+        bot.grow(star.val);
+        bot.speedBuff = CFG.SBUFF_DUR;
+        this.removeFood(this.stars, i);
+        break;
+      }
+    }
+  }
+
   die(snake, killer) {
     if (snake.dead) return;
 
@@ -282,18 +309,6 @@ export class LocalSimulation {
       }
     }
 
-    for (const bot of this.bots) {
-      if (bot.dead) continue;
-      for (let i = this.stars.length - 1; i >= 0; i--) {
-        const star = this.stars[i];
-        if (dist(bot.head.x, bot.head.y, star.x, star.y) < getSnakeRadiusValue(bot) + star.r + 2) {
-          bot.grow(star.val);
-          bot.speedBuff = CFG.SBUFF_DUR;
-          this.removeFood(this.stars, i);
-          break;
-        }
-      }
-    }
   }
 
   rebuildGrids() {
@@ -350,6 +365,7 @@ export class LocalSimulation {
     for (const bot of this.bots) {
       if (bot.spawnProtectionTicks > 0) bot.spawnProtectionTicks--;
       bot.update({ foodsGrid: this.foodsGrid, stars: this.stars, player: this.player });
+      this.eatFoodsForBot(bot);
       if (!bot.dead && Math.hypot(bot.head.x, bot.head.y) > this.getWorldRadius() - getSnakeRadiusValue(bot)) {
         this.die(bot, { name: "WALL" });
       }

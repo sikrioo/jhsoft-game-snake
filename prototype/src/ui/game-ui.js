@@ -320,9 +320,10 @@ export class GameUI {
 
   renderSkins(skins, selectedSkin, onSelect) {
     this.dom.skinGrid.innerHTML = skins.map((skin) => `
-      <div class="skinCard${skin.id === selectedSkin.id ? " on" : ""}" data-id="${skin.id}" style="--sc:${skin.css};--sp:${skin.sp}">
+      <div class="skinCard${skin.id === selectedSkin.id ? " on" : ""}${skin.experimental ? " experimental" : ""}" data-id="${skin.id}" style="--sc:${skin.css};--sp:${skin.sp}">
         <div class="skinPreview"></div>
         <div class="skinName">${skin.name}</div>
+        ${skin.experimental ? `<div class="skinStatus">${skin.statusTag || "EXPERIMENT"}</div>` : ""}
         <div class="skinDesc">${skin.desc}</div>
       </div>
     `).join("");
