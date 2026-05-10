@@ -80,6 +80,38 @@ function getZombieVariant(snake) {
   return snake.botType || "basic";
 }
 
+function getHeadFeatureLayout(snake) {
+  if (snake.skin.pattern === "worm") {
+    return {
+      headScale: 0.94,
+      eyeForward: CFG.SR * 0.54,
+      eyeOffset: CFG.SR * 0.42,
+      pupilForward: CFG.SR * 0.12,
+      eyeScale: 1.18,
+      pupilScale: 0.88,
+      sparkScale: 0.7,
+      glossX: -CFG.SR * 0.34,
+      glossY: -CFG.SR * 0.2,
+      glossScaleX: 0.7,
+      glossScaleY: 0.58,
+    };
+  }
+
+  return {
+    headScale: 1,
+    eyeForward: CFG.SR * 0.44,
+    eyeOffset: CFG.SR * 0.54,
+    pupilForward: CFG.SR * 0.13,
+    eyeScale: 1,
+    pupilScale: 1,
+    sparkScale: 1,
+    glossX: -CFG.SR * 0.26,
+    glossY: -CFG.SR * 0.28,
+    glossScaleX: 1,
+    glossScaleY: 0.82,
+  };
+}
+
 function getSegmentStyle(snake, bodyIndex, t, buffed, rainbowPhase) {
   const baseScale = getBodyScaleProfile(snake.len, t);
 
@@ -104,6 +136,15 @@ function getSegmentStyle(snake, bodyIndex, t, buffed, rainbowPhase) {
     return {
       tint: hslHex(188, 44, snake.isPlayer ? 80 + t * 8 : 72 + t * 8),
       alpha: snake.isPlayer ? 0.32 + t * 0.16 : 0.24 + t * 0.14,
+      scale: baseScale,
+    };
+  }
+
+  if (snake.skin.pattern === "worm") {
+    const bandOffset = [2, 0, -3, -1][bodyIndex % 4];
+    return {
+      tint: hslHex(12, snake.isPlayer ? 34 : 28, (snake.isPlayer ? 63 : 56) + bandOffset + t * 2),
+      alpha: snake.isPlayer ? 0.84 + t * 0.1 : 0.78 + t * 0.1,
       scale: baseScale,
     };
   }
@@ -260,6 +301,25 @@ function getHeadStyle(snake, buffed, now) {
       auraBoostAlpha: 0.13,
       auraBuffAlpha: 0.09,
       auraWidth: CFG.SR * 3.6,
+    };
+  }
+
+  if (snake.skin.pattern === "worm") {
+    return {
+      shadowTint: hslHex(12, 26, 24),
+      shadowAlpha: 0.34,
+      baseTint: hslHex(12, snake.isPlayer ? 40 : 32, snake.isPlayer ? 70 : 62),
+      baseAlpha: 0.98,
+      glossAlpha: 0.08,
+      stripeVisible: false,
+      stripeAlpha: 0,
+      stripeTint: 0x5e4039,
+      mood: null,
+      auraColor: 0xf4b5aa,
+      auraIdleAlpha: 0,
+      auraBoostAlpha: 0.08,
+      auraBuffAlpha: 0.06,
+      auraWidth: CFG.SR * 3.1,
     };
   }
 
@@ -423,18 +483,33 @@ export class SnakeBody {
     const style = getHeadStyle(this.snake, buffed, now);
     const sizeScale = this.snake.sizeScale ?? 1;
     const headScale = getHeadScaleProfile(this.snake.len);
+    const featureLayout = getHeadFeatureLayout(this.snake);
 
     this.headContainer.position.set(head.x, head.y);
     this.headContainer.rotation = this.snake.angle;
-    this.headContainer.scale.set(sizeScale * headScale);
+    this.headContainer.scale.set(sizeScale * headScale * featureLayout.headScale);
     this.headShadow.tint = style.shadowTint;
     this.headShadow.alpha = style.shadowAlpha;
     this.headBase.tint = style.baseTint;
     this.headBase.alpha = style.baseAlpha;
     this.headGloss.alpha = style.glossAlpha;
+    this.headGloss.position.set(featureLayout.glossX, featureLayout.glossY);
+    this.headGloss.scale.set(featureLayout.glossScaleX, featureLayout.glossScaleY);
     this.headStripes.visible = style.stripeVisible;
     this.headStripes.alpha = style.stripeAlpha;
     this.headStripes.tint = style.stripeTint;
+    this.leftEye.position.set(featureLayout.eyeForward, -featureLayout.eyeOffset);
+    this.rightEye.position.set(featureLayout.eyeForward, featureLayout.eyeOffset);
+    this.leftPupil.position.set(featureLayout.eyeForward + featureLayout.pupilForward, -featureLayout.eyeOffset);
+    this.rightPupil.position.set(featureLayout.eyeForward + featureLayout.pupilForward, featureLayout.eyeOffset);
+    this.leftEyeSpark.position.set(featureLayout.eyeForward - CFG.SR * 0.04, -featureLayout.eyeOffset - CFG.SR * 0.09);
+    this.rightEyeSpark.position.set(featureLayout.eyeForward - CFG.SR * 0.04, featureLayout.eyeOffset - CFG.SR * 0.09);
+    this.leftEye.scale.set(featureLayout.eyeScale);
+    this.rightEye.scale.set(featureLayout.eyeScale);
+    this.leftPupil.scale.set(featureLayout.pupilScale);
+    this.rightPupil.scale.set(featureLayout.pupilScale);
+    this.leftEyeSpark.scale.set(featureLayout.sparkScale);
+    this.rightEyeSpark.scale.set(featureLayout.sparkScale);
     this.mouthSmile.visible = style.mood === "smile";
     this.mouthAngry.visible = style.mood === "angry";
 

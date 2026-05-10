@@ -13,7 +13,9 @@ export function getSnakeRadius(length) {
 
 export function enrichSkin(skin) {
   const enriched = { ...skin };
-  if (enriched.id === "rainbow") {
+  if (enriched.id === "worm") {
+    enriched.pattern = "worm";
+  } else if (enriched.id === "rainbow") {
     enriched.pattern = "rainbow";
     enriched.mood = "smile";
   } else if (enriched.id === "zebra") {

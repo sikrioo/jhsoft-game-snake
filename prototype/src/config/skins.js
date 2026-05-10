@@ -1,5 +1,6 @@
 export const SKINS = [
   { id: "neon", name: "NEON", hue: 160, hex: 0x00ffc8, css: "#00ffc8", desc: "Default neon skin", sp: "#00ffc8" },
+  { id: "worm", name: "WORM", hue: 12, hex: 0xd88e84, css: "#d88e84", desc: "Soft earthworm tone with beady eyes", sp: "linear-gradient(90deg,#c97d72,#d88e84,#e9ada3)" },
   { id: "comet", name: "COMET", hue: 210, hex: 0x60a5fa, css: "#60a5fa", desc: "Cold blue trail", sp: "#60a5fa" },
   { id: "viper", name: "VIPER", hue: 338, hex: 0xff3c8a, css: "#ff3c8a", desc: "Aggressive pink", sp: "#ff3c8a" },
   { id: "titan", name: "TITAN", hue: 45, hex: 0xffd060, css: "#ffd060", desc: "Heavy gold armor", sp: "#ffd060" },
