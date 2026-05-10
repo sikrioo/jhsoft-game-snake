@@ -37,13 +37,51 @@ const RAINBOW_BOT_TINTS = buildHueRamp(72, 46);
 const RAINBOW_HEAD_BASE_PLAYER = buildHueRamp(88, 63);
 const RAINBOW_HEAD_BASE_BOT = buildHueRamp(88, 52);
 const RAINBOW_HEAD_SHADOW = buildHueRamp(70, 10);
+const SHORT_SNAKE_MAX_LEN = CFG.MIN_LEN + 16;
+const LONG_SNAKE_MIN_LEN = CFG.MIN_LEN + 32;
+const SHORT_SNAKE_TAIL_PORTION = 0.15;
+
+function clamp01(value) {
+  return Math.max(0, Math.min(1, value));
+}
+
+function smoothstep01(value) {
+  const t = clamp01(value);
+  return t * t * (3 - 2 * t);
+}
+
+function lerp(a, b, t) {
+  return a + (b - a) * t;
+}
+
+function getShortSnakeBlend(length) {
+  if (length <= SHORT_SNAKE_MAX_LEN) return 0;
+  if (length >= LONG_SNAKE_MIN_LEN) return 1;
+  return smoothstep01((length - SHORT_SNAKE_MAX_LEN) / (LONG_SNAKE_MIN_LEN - SHORT_SNAKE_MAX_LEN));
+}
+
+function getBodyScaleProfile(length, t) {
+  const clampedT = clamp01(t);
+  const legacyScale = 0.68 + 0.32 * clampedT;
+  const tailT = smoothstep01(clampedT / SHORT_SNAKE_TAIL_PORTION);
+  const bodyT = smoothstep01((clampedT - SHORT_SNAKE_TAIL_PORTION) / (1 - SHORT_SNAKE_TAIL_PORTION));
+  const shortScale = clampedT <= SHORT_SNAKE_TAIL_PORTION
+    ? lerp(0.74, 0.91, tailT)
+    : lerp(0.91, 0.95, bodyT);
+
+  return lerp(shortScale, legacyScale, getShortSnakeBlend(length));
+}
+
+function getHeadScaleProfile(length) {
+  return lerp(0.78, 1, getShortSnakeBlend(length));
+}
 
 function getZombieVariant(snake) {
   return snake.botType || "basic";
 }
 
 function getSegmentStyle(snake, bodyIndex, t, buffed, rainbowPhase) {
-  const baseScale = 0.68 + 0.32 * t;
+  const baseScale = getBodyScaleProfile(snake.len, t);
 
   if (buffed) {
     return {
@@ -76,7 +114,7 @@ function getSegmentStyle(snake, bodyIndex, t, buffed, rainbowPhase) {
       return {
         tint: hslHex(118, 62, 28 + t * 32),
         alpha: 0.58 + t * 0.36,
-        scale: 0.58 + 0.24 * t,
+        scale: baseScale,
       };
     }
     if (variant === "long") {
@@ -84,14 +122,14 @@ function getSegmentStyle(snake, bodyIndex, t, buffed, rainbowPhase) {
       return {
         tint: hslHex(95, band ? 28 : 18, band ? 36 : 24),
         alpha: 0.82 + t * 0.12,
-        scale: 0.76 + 0.38 * t,
+        scale: baseScale,
       };
     }
     if (variant === "elite") {
       return {
         tint: hslHex(92, 48, 30 + t * 18),
         alpha: 0.78 + t * 0.2,
-        scale: 0.72 + 0.34 * t,
+        scale: baseScale,
       };
     }
     return {
@@ -384,10 +422,11 @@ export class SnakeBody {
     const head = this.snake.segs[0];
     const style = getHeadStyle(this.snake, buffed, now);
     const sizeScale = this.snake.sizeScale ?? 1;
+    const headScale = getHeadScaleProfile(this.snake.len);
 
     this.headContainer.position.set(head.x, head.y);
     this.headContainer.rotation = this.snake.angle;
-    this.headContainer.scale.set(sizeScale);
+    this.headContainer.scale.set(sizeScale * headScale);
     this.headShadow.tint = style.shadowTint;
     this.headShadow.alpha = style.shadowAlpha;
     this.headBase.tint = style.baseTint;
