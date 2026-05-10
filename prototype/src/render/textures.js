@@ -336,9 +336,9 @@ export class TextureStore {
     const center = size / 2;
     const g = new PIXI.Graphics();
     g.lineStyle(Math.max(2, radius * 0.42), 0xffffff, 1);
-    g.moveTo(center - radius * 0.88, center + radius * 0.36);
-    g.lineTo(center, center - radius * 0.42);
-    g.lineTo(center + radius * 0.88, center + radius * 0.36);
+    g.moveTo(center - radius * 0.88, center - radius * 0.22);
+    g.quadraticCurveTo(center - radius * 0.3, center + radius * 0.34, center, center + radius * 0.38);
+    g.quadraticCurveTo(center + radius * 0.3, center + radius * 0.34, center + radius * 0.88, center - radius * 0.22);
     g.lineStyle(0);
 
     const texture = this.app.renderer.generateTexture(g, { resolution: 1 });

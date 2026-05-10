@@ -84,7 +84,7 @@ function getHeadFeatureLayout(snake) {
   if (snake.skin.pattern === "jelly") {
     return {
       headScale: 1.04,
-      eyeForward: -CFG.SR * 0.1,
+      eyeForward: CFG.SR * 0.1,
       eyeOffset: CFG.SR * 0.34,
       pupilForward: CFG.SR * 0.1,
       eyeScale: 0.9,
@@ -94,9 +94,9 @@ function getHeadFeatureLayout(snake) {
       glossY: -CFG.SR * 0.34,
       glossScaleX: 1.18,
       glossScaleY: 0.94,
-      mouthX: -CFG.SR * 0.02,
-      mouthY: CFG.SR * 0.3,
-      mouthScale: 0.74,
+      mouthX: CFG.SR * 0.26,
+      mouthY: CFG.SR * 0.56,
+      mouthScale: 0.78,
       faceUpright: true,
     };
   }
