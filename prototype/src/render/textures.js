@@ -211,6 +211,24 @@ export class TextureStore {
     return texture;
   }
 
+  getEyeHappyClosedTex(radius) {
+    const key = `eye-happy-closed:${radius}`;
+    if (this.cache.has(key)) return this.cache.get(key);
+
+    const size = radius * 2.8 + 8;
+    const center = size / 2;
+    const g = new PIXI.Graphics();
+    g.lineStyle(Math.max(2, radius * 0.42), 0xffffff, 1);
+    g.moveTo(center - radius * 0.9, center + radius * 0.1);
+    g.quadraticCurveTo(center, center - radius * 0.78, center + radius * 0.9, center + radius * 0.1);
+    g.lineStyle(0);
+
+    const texture = this.app.renderer.generateTexture(g, { resolution: 1 });
+    g.destroy();
+    this.cache.set(key, texture);
+    return texture;
+  }
+
   getMouthSmileTex(radius) {
     const key = `mouth-smile:${radius}`;
     if (this.cache.has(key)) return this.cache.get(key);
@@ -221,6 +239,26 @@ export class TextureStore {
     g.lineStyle(2, 0xffffff, 1);
     g.arc(center + radius * 0.1, center + radius * 0.1, radius * 0.42, 0.28 * Math.PI, 0.72 * Math.PI);
     g.lineStyle(0);
+
+    const texture = this.app.renderer.generateTexture(g, { resolution: 1 });
+    g.destroy();
+    this.cache.set(key, texture);
+    return texture;
+  }
+
+  getMouthBigSmileTex(radius) {
+    const key = `mouth-big-smile:${radius}`;
+    if (this.cache.has(key)) return this.cache.get(key);
+
+    const size = radius * 2.9 + 10;
+    const center = size / 2;
+    const g = new PIXI.Graphics();
+    g.beginFill(0xffffff, 1);
+    g.drawEllipse(center + radius * 0.12, center + radius * 0.22, radius * 0.58, radius * 0.4);
+    g.endFill();
+    g.beginFill(0xffffff, 0.32);
+    g.drawEllipse(center + radius * 0.08, center + radius * 0.08, radius * 0.26, radius * 0.1);
+    g.endFill();
 
     const texture = this.app.renderer.generateTexture(g, { resolution: 1 });
     g.destroy();

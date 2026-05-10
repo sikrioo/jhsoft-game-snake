@@ -81,6 +81,25 @@ function getZombieVariant(snake) {
 }
 
 function getHeadFeatureLayout(snake) {
+  if (snake.skin.pattern === "jelly") {
+    return {
+      headScale: 1.06,
+      eyeForward: CFG.SR * 0.48,
+      eyeOffset: CFG.SR * 0.48,
+      pupilForward: CFG.SR * 0.1,
+      eyeScale: 1.02,
+      pupilScale: 0.8,
+      sparkScale: 0.8,
+      glossX: -CFG.SR * 0.3,
+      glossY: -CFG.SR * 0.34,
+      glossScaleX: 1.18,
+      glossScaleY: 0.94,
+      mouthX: CFG.SR * 0.9,
+      mouthY: CFG.SR * 0.16,
+      mouthScale: 1.08,
+    };
+  }
+
   if (snake.skin.pattern === "worm") {
     return {
       headScale: 0.94,
@@ -94,6 +113,9 @@ function getHeadFeatureLayout(snake) {
       glossY: -CFG.SR * 0.2,
       glossScaleX: 0.7,
       glossScaleY: 0.58,
+      mouthX: CFG.SR * 0.98,
+      mouthY: 0,
+      mouthScale: 1,
     };
   }
 
@@ -109,6 +131,31 @@ function getHeadFeatureLayout(snake) {
     glossY: -CFG.SR * 0.28,
     glossScaleX: 1,
     glossScaleY: 0.82,
+    mouthX: CFG.SR * 0.98,
+    mouthY: 0,
+    mouthScale: 1,
+  };
+}
+
+function getMotionProfile(snake) {
+  if (snake.skin.pattern === "jelly") {
+    return {
+      segmentPulseAmp: 0.03,
+      segmentPulseFreq: 0.015,
+      segmentPulsePhase: 0.45,
+      headBounceAmp: 0.045,
+      headBounceFreq: 0.018,
+      headBobAmp: 0.5,
+    };
+  }
+
+  return {
+    segmentPulseAmp: 0,
+    segmentPulseFreq: 0.015,
+    segmentPulsePhase: 0.45,
+    headBounceAmp: 0,
+    headBounceFreq: 0.018,
+    headBobAmp: 0,
   };
 }
 
@@ -137,6 +184,15 @@ function getSegmentStyle(snake, bodyIndex, t, buffed, rainbowPhase) {
       tint: hslHex(188, 44, snake.isPlayer ? 80 + t * 8 : 72 + t * 8),
       alpha: snake.isPlayer ? 0.32 + t * 0.16 : 0.24 + t * 0.14,
       scale: baseScale,
+    };
+  }
+
+  if (snake.skin.pattern === "jelly") {
+    const bandOffset = [4, 1, -1, 2][bodyIndex % 4];
+    return {
+      tint: hslHex(126, snake.isPlayer ? 86 : 72, (snake.isPlayer ? 65 : 57) + bandOffset + t * 3),
+      alpha: snake.isPlayer ? 0.9 + t * 0.05 : 0.84 + t * 0.06,
+      scale: baseScale * 1.02,
     };
   }
 
@@ -323,6 +379,29 @@ function getHeadStyle(snake, buffed, now) {
     };
   }
 
+  if (snake.skin.pattern === "jelly") {
+    return {
+      shadowTint: hslHex(126, 36, 24),
+      shadowAlpha: 0.22,
+      baseTint: hslHex(126, snake.isPlayer ? 88 : 74, snake.isPlayer ? 71 : 63),
+      baseAlpha: 0.99,
+      glossAlpha: 0.24,
+      stripeVisible: false,
+      stripeAlpha: 0,
+      stripeTint: 0x173819,
+      mood: "smile",
+      eyeMode: "happy_closed",
+      eyeTint: 0x1b1b1b,
+      mouthMode: "big_smile",
+      mouthTint: 0x4b2a1d,
+      auraColor: 0x9affb0,
+      auraIdleAlpha: 0.035,
+      auraBoostAlpha: 0.1,
+      auraBuffAlpha: 0.08,
+      auraWidth: CFG.SR * 3.4,
+    };
+  }
+
   return {
     shadowTint: hslHex(hue, snake.skin.pattern === "ghost" ? 24 : 70, snake.skin.pattern === "ghost" ? 18 : snake.skin.pattern === "zebra" ? 8 : 10),
     shadowAlpha: snake.skin.pattern === "ghost" ? 0.32 : snake.skin.pattern === "zombie" ? 0.42 : 0.55,
@@ -368,7 +447,10 @@ export class SnakeBody {
     this.rightEyeSpark = null;
     this.mouthSmile = null;
     this.mouthAngry = null;
+    this.mouthBigSmile = null;
     this.nameText = null;
+    this.eyeWhiteTex = null;
+    this.eyeClosedTex = null;
 
     if (this.enabled) {
       this.headAura = new PIXI.Graphics();
@@ -383,8 +465,13 @@ export class SnakeBody {
       const eyeWhiteTex = this.textures.getEyeWhiteTex(CFG.SR * 0.32);
       const eyePupilTex = this.textures.getEyePupilTex(CFG.SR * 0.16);
       const eyeSparkTex = this.textures.getEyeWhiteTex(CFG.SR * 0.075);
+      const eyeClosedTex = this.textures.getEyeHappyClosedTex(CFG.SR * 0.34);
       const mouthSmileTex = this.textures.getMouthSmileTex(CFG.SR);
       const mouthAngryTex = this.textures.getMouthAngryTex(CFG.SR);
+      const mouthBigSmileTex = this.textures.getMouthBigSmileTex(CFG.SR);
+
+      this.eyeWhiteTex = eyeWhiteTex;
+      this.eyeClosedTex = eyeClosedTex;
 
       this.headShadow = new PIXI.Sprite(headShadowTex);
       this.headShadow.anchor.set(0.5);
@@ -423,15 +510,20 @@ export class SnakeBody {
 
       this.mouthSmile = new PIXI.Sprite(mouthSmileTex);
       this.mouthAngry = new PIXI.Sprite(mouthAngryTex);
+      this.mouthBigSmile = new PIXI.Sprite(mouthBigSmileTex);
       this.mouthSmile.anchor.set(0.5);
       this.mouthAngry.anchor.set(0.5);
+      this.mouthBigSmile.anchor.set(0.5);
       this.mouthSmile.tint = 0x04080f;
       this.mouthAngry.tint = 0x04080f;
+      this.mouthBigSmile.tint = 0x4b2a1d;
       this.mouthSmile.alpha = 0.82;
       this.mouthAngry.alpha = 0.82;
+      this.mouthBigSmile.alpha = 0.94;
       this.mouthSmile.position.set(CFG.SR * 0.98, 0);
       this.mouthAngry.position.set(CFG.SR * 0.98, 0);
-      this.headContainer.addChild(this.mouthSmile, this.mouthAngry);
+      this.mouthBigSmile.position.set(CFG.SR * 0.98, 0);
+      this.headContainer.addChild(this.mouthSmile, this.mouthAngry, this.mouthBigSmile);
 
       const eyeForward = CFG.SR * 0.44;
       const eyeOffset = CFG.SR * 0.54;
@@ -484,10 +576,22 @@ export class SnakeBody {
     const sizeScale = this.snake.sizeScale ?? 1;
     const headScale = getHeadScaleProfile(this.snake.len);
     const featureLayout = getHeadFeatureLayout(this.snake);
+    const motion = getMotionProfile(this.snake);
+    const headWave = Math.sin(now * motion.headBounceFreq + this.snake.len * 0.07);
+    const headScaleX = sizeScale * headScale * featureLayout.headScale * (1 + headWave * motion.headBounceAmp);
+    const headScaleY = sizeScale * headScale * featureLayout.headScale * (1 - headWave * motion.headBounceAmp * 0.7);
+    const eyeMode = style.eyeMode || "round";
+    const mouthMode = style.mouthMode || (style.mood === "angry" ? "angry" : style.mood === "smile" ? "smile" : "none");
+    const eyeTint = style.eyeTint ?? 0xffffff;
+    const mouthTint = style.mouthTint ?? 0x04080f;
+    const headBob = headWave * motion.headBobAmp;
 
-    this.headContainer.position.set(head.x, head.y);
+    this.headContainer.position.set(
+      head.x + Math.cos(this.snake.angle) * headBob,
+      head.y + Math.sin(this.snake.angle) * headBob
+    );
     this.headContainer.rotation = this.snake.angle;
-    this.headContainer.scale.set(sizeScale * headScale * featureLayout.headScale);
+    this.headContainer.scale.set(headScaleX, headScaleY);
     this.headShadow.tint = style.shadowTint;
     this.headShadow.alpha = style.shadowAlpha;
     this.headBase.tint = style.baseTint;
@@ -498,6 +602,10 @@ export class SnakeBody {
     this.headStripes.visible = style.stripeVisible;
     this.headStripes.alpha = style.stripeAlpha;
     this.headStripes.tint = style.stripeTint;
+    this.leftEye.texture = eyeMode === "happy_closed" ? this.eyeClosedTex : this.eyeWhiteTex;
+    this.rightEye.texture = eyeMode === "happy_closed" ? this.eyeClosedTex : this.eyeWhiteTex;
+    this.leftEye.tint = eyeMode === "happy_closed" ? eyeTint : 0xffffff;
+    this.rightEye.tint = eyeMode === "happy_closed" ? eyeTint : 0xffffff;
     this.leftEye.position.set(featureLayout.eyeForward, -featureLayout.eyeOffset);
     this.rightEye.position.set(featureLayout.eyeForward, featureLayout.eyeOffset);
     this.leftPupil.position.set(featureLayout.eyeForward + featureLayout.pupilForward, -featureLayout.eyeOffset);
@@ -510,8 +618,22 @@ export class SnakeBody {
     this.rightPupil.scale.set(featureLayout.pupilScale);
     this.leftEyeSpark.scale.set(featureLayout.sparkScale);
     this.rightEyeSpark.scale.set(featureLayout.sparkScale);
-    this.mouthSmile.visible = style.mood === "smile";
-    this.mouthAngry.visible = style.mood === "angry";
+    this.leftPupil.visible = eyeMode !== "happy_closed";
+    this.rightPupil.visible = eyeMode !== "happy_closed";
+    this.leftEyeSpark.visible = eyeMode !== "happy_closed";
+    this.rightEyeSpark.visible = eyeMode !== "happy_closed";
+    this.mouthSmile.position.set(featureLayout.mouthX, featureLayout.mouthY);
+    this.mouthAngry.position.set(featureLayout.mouthX, featureLayout.mouthY);
+    this.mouthBigSmile.position.set(featureLayout.mouthX, featureLayout.mouthY);
+    this.mouthSmile.scale.set(featureLayout.mouthScale);
+    this.mouthAngry.scale.set(featureLayout.mouthScale);
+    this.mouthBigSmile.scale.set(featureLayout.mouthScale);
+    this.mouthSmile.tint = mouthTint;
+    this.mouthAngry.tint = mouthTint;
+    this.mouthBigSmile.tint = mouthTint;
+    this.mouthSmile.visible = mouthMode === "smile";
+    this.mouthAngry.visible = mouthMode === "angry";
+    this.mouthBigSmile.visible = mouthMode === "big_smile";
 
     if (this.snake.boosting || buffed || style.auraIdleAlpha > 0) {
       const auraColor = buffed ? 0xffd060 : style.auraColor;
@@ -548,6 +670,7 @@ export class SnakeBody {
     const rainbowPhase = Math.floor((now * 0.08) % 360);
     const hitMix = this.snake.hitFlashTicks > 0 ? Math.min(0.55, this.snake.hitFlashTicks / 12) : 0;
     const sizeScale = this.snake.sizeScale ?? 1;
+    const motion = getMotionProfile(this.snake);
     if (this.snake.hitFlashTicks > 0) this.snake.hitFlashTicks--;
 
     for (let i = 0; i < bodyCount; i++) {
@@ -556,9 +679,12 @@ export class SnakeBody {
       const sprite = this.sprites[i];
       const t = i * invBodyCount;
       const style = getSegmentStyle(this.snake, i, t, buffed, rainbowPhase);
+      const pulse = motion.segmentPulseAmp > 0
+        ? Math.sin(now * motion.segmentPulseFreq + i * motion.segmentPulsePhase) * motion.segmentPulseAmp
+        : 0;
       sprite.visible = true;
       sprite.position.set(seg.x, seg.y);
-      sprite.scale.set(style.scale * sizeScale);
+      sprite.scale.set(style.scale * sizeScale * (1 + pulse));
       sprite.tint = hitMix > 0 ? mixHex(style.tint, 0xff5a66, hitMix) : style.tint;
       sprite.alpha = style.alpha;
     }

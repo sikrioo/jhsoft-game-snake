@@ -1,5 +1,31 @@
 export const SKINS = [
   { id: "neon", name: "NEON", hue: 160, hex: 0x00ffc8, css: "#00ffc8", desc: "Default neon skin", sp: "#00ffc8" },
+  {
+    id: "happy_jelly_green",
+    name: "HAPPY JELLY",
+    type: "cute",
+    hue: 126,
+    hex: 0x59ff7a,
+    css: "#59ff7a",
+    desc: "Sunny jelly creature with a silly happy grin",
+    sp: "linear-gradient(90deg,#45e86b,#59ff7a,#9affb0)",
+    colors: {
+      body: "#59ff7a",
+      body2: "#45e86b",
+      highlight: "#9affb0",
+      mouth: "#4b2a1d",
+      eye: "#1b1b1b",
+    },
+    face: {
+      eyeStyle: "happy_closed",
+      mouthStyle: "big_smile",
+    },
+    effects: {
+      squishyMotion: true,
+      glow: true,
+      bounceHead: true,
+    },
+  },
   { id: "worm", name: "WORM", hue: 12, hex: 0xd88e84, css: "#d88e84", desc: "Soft earthworm tone with beady eyes", sp: "linear-gradient(90deg,#c97d72,#d88e84,#e9ada3)" },
   { id: "comet", name: "COMET", hue: 210, hex: 0x60a5fa, css: "#60a5fa", desc: "Cold blue trail", sp: "#60a5fa" },
   { id: "viper", name: "VIPER", hue: 338, hex: 0xff3c8a, css: "#ff3c8a", desc: "Aggressive pink", sp: "#ff3c8a" },
