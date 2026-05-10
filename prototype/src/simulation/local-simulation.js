@@ -137,7 +137,10 @@ export class LocalSimulation {
   }
 
   spawnDeathFoodTrail(snake) {
-    const dropCount = Math.max(8, Math.min(140, Math.round(snake.len * 0.85)));
+    const dropCount = Math.max(
+      CFG.DEATH_FOOD_DROP_MIN,
+      Math.min(CFG.DEATH_FOOD_DROP_MAX, Math.round(snake.len * CFG.DEATH_FOOD_DROP_FACTOR))
+    );
     for (let i = 0; i < dropCount; i++) {
       const t = i / Math.max(1, dropCount - 1);
       const segIndex = Math.floor(t * (snake.segs.length - 1));
