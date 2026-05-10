@@ -4,6 +4,20 @@ export class TextureStore {
     this.cache = new Map();
   }
 
+  buildCanvasTexture(key, width, height, draw) {
+    if (this.cache.has(key)) return this.cache.get(key);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    draw(ctx, width, height);
+
+    const texture = PIXI.Texture.from(canvas);
+    this.cache.set(key, texture);
+    return texture;
+  }
+
   quantizeRadius(radius) {
     if (radius <= 4) return 4;
     if (radius <= 6) return 6;
@@ -74,19 +88,73 @@ export class TextureStore {
     if (this.cache.has(key)) return this.cache.get(key);
 
     const pad = 4;
-    const center = radius + pad;
-    const g = new PIXI.Graphics();
-    g.beginFill(0xffffff, 1);
-    g.drawCircle(center, center, radius);
-    g.endFill();
-    g.beginFill(0xffffff, 0.28);
-    g.drawCircle(center - radius * 0.24, center - radius * 0.24, radius * 0.38);
-    g.endFill();
+    const size = radius * 2 + pad * 2;
+    const center = size / 2;
 
-    const texture = this.app.renderer.generateTexture(g, { resolution: 1 });
-    g.destroy();
-    this.cache.set(key, texture);
-    return texture;
+    return this.buildCanvasTexture(key, size, size, (ctx) => {
+      ctx.clearRect(0, 0, size, size);
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(center, center, radius, 0, Math.PI * 2);
+      ctx.closePath();
+      ctx.clip();
+
+      const bodyGradient = ctx.createLinearGradient(0, center - radius, 0, center + radius);
+      bodyGradient.addColorStop(0, "rgba(255,255,255,0.98)");
+      bodyGradient.addColorStop(0.38, "rgba(226,226,226,0.96)");
+      bodyGradient.addColorStop(0.68, "rgba(196,196,196,0.95)");
+      bodyGradient.addColorStop(1, "rgba(156,156,156,0.94)");
+      ctx.fillStyle = bodyGradient;
+      ctx.fillRect(center - radius, center - radius, radius * 2, radius * 2);
+
+      const topGlow = ctx.createRadialGradient(
+        center - radius * 0.34,
+        center - radius * 0.42,
+        radius * 0.08,
+        center - radius * 0.34,
+        center - radius * 0.42,
+        radius * 1.08
+      );
+      topGlow.addColorStop(0, "rgba(255,255,255,0.42)");
+      topGlow.addColorStop(0.5, "rgba(255,255,255,0.12)");
+      topGlow.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = topGlow;
+      ctx.fillRect(center - radius, center - radius, radius * 2, radius * 2);
+
+      const lowerShade = ctx.createLinearGradient(0, center, 0, center + radius);
+      lowerShade.addColorStop(0, "rgba(90,90,90,0)");
+      lowerShade.addColorStop(1, "rgba(90,90,90,0.18)");
+      ctx.fillStyle = lowerShade;
+      ctx.fillRect(center - radius, center, radius * 2, radius);
+
+      const sideShade = ctx.createRadialGradient(
+        center + radius * 0.38,
+        center + radius * 0.12,
+        radius * 0.24,
+        center + radius * 0.38,
+        center + radius * 0.12,
+        radius * 1.06
+      );
+      sideShade.addColorStop(0, "rgba(120,120,120,0)");
+      sideShade.addColorStop(1, "rgba(88,88,88,0.16)");
+      ctx.fillStyle = sideShade;
+      ctx.fillRect(center - radius, center - radius, radius * 2, radius * 2);
+
+      ctx.restore();
+
+      ctx.beginPath();
+      ctx.arc(center, center, radius - Math.max(0.8, radius * 0.12), 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(84,84,84,0.08)";
+      ctx.lineWidth = Math.max(1, radius * 0.18);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(center, center, radius - Math.max(0.4, radius * 0.05), 0.08 * Math.PI, 0.92 * Math.PI);
+      ctx.strokeStyle = "rgba(255,255,255,0.12)";
+      ctx.lineWidth = Math.max(0.8, radius * 0.08);
+      ctx.stroke();
+    });
   }
 
   getShardTex(radius) {
@@ -126,17 +194,28 @@ export class TextureStore {
     if (this.cache.has(key)) return this.cache.get(key);
 
     const pad = 8;
-    const cx = radius * 1.7 + pad;
-    const cy = radius * 1.2 + pad;
-    const g = new PIXI.Graphics();
-    g.beginFill(0xffffff, 1);
-    g.drawEllipse(cx, cy, radius * 1.7, radius * 1.2);
-    g.endFill();
+    const size = Math.ceil(radius * 3.4 + pad * 2);
+    const cx = size / 2;
+    const cy = size / 2;
 
-    const texture = this.app.renderer.generateTexture(g, { resolution: 1 });
-    g.destroy();
-    this.cache.set(key, texture);
-    return texture;
+    return this.buildCanvasTexture(key, size, size, (ctx) => {
+      ctx.clearRect(0, 0, size, size);
+      const gradient = ctx.createRadialGradient(
+        cx - radius * 0.12,
+        cy + radius * 0.16,
+        radius * 0.18,
+        cx,
+        cy,
+        radius * 1.95
+      );
+      gradient.addColorStop(0, "rgba(255,255,255,0.94)");
+      gradient.addColorStop(0.56, "rgba(188,188,188,0.5)");
+      gradient.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, radius * 1.9, radius * 1.38, 0, 0, Math.PI * 2);
+      ctx.fill();
+    });
   }
 
   getHeadBaseTex(radius) {
@@ -144,17 +223,55 @@ export class TextureStore {
     if (this.cache.has(key)) return this.cache.get(key);
 
     const pad = 8;
-    const cx = radius * 1.7 + pad;
-    const cy = radius * 1.2 + pad;
-    const g = new PIXI.Graphics();
-    g.beginFill(0xffffff, 1);
-    g.drawEllipse(cx, cy, radius * 1.7, radius * 1.2);
-    g.endFill();
+    const size = Math.ceil(radius * 3.4 + pad * 2);
+    const cx = size / 2;
+    const cy = size / 2;
 
-    const texture = this.app.renderer.generateTexture(g, { resolution: 1 });
-    g.destroy();
-    this.cache.set(key, texture);
-    return texture;
+    return this.buildCanvasTexture(key, size, size, (ctx) => {
+      ctx.clearRect(0, 0, size, size);
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, radius * 1.7, radius * 1.2, 0, 0, Math.PI * 2);
+      ctx.closePath();
+      ctx.clip();
+
+      const bodyGradient = ctx.createLinearGradient(0, cy - radius * 1.2, 0, cy + radius * 1.2);
+      bodyGradient.addColorStop(0, "rgba(255,255,255,0.98)");
+      bodyGradient.addColorStop(0.34, "rgba(230,230,230,0.98)");
+      bodyGradient.addColorStop(0.68, "rgba(198,198,198,0.97)");
+      bodyGradient.addColorStop(1, "rgba(158,158,158,0.96)");
+      ctx.fillStyle = bodyGradient;
+      ctx.fillRect(cx - radius * 1.8, cy - radius * 1.3, radius * 3.6, radius * 2.6);
+
+      const foreheadGlow = ctx.createRadialGradient(
+        cx - radius * 0.68,
+        cy - radius * 0.58,
+        radius * 0.14,
+        cx - radius * 0.68,
+        cy - radius * 0.58,
+        radius * 1.5
+      );
+      foreheadGlow.addColorStop(0, "rgba(255,255,255,0.42)");
+      foreheadGlow.addColorStop(0.6, "rgba(255,255,255,0.12)");
+      foreheadGlow.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = foreheadGlow;
+      ctx.fillRect(cx - radius * 1.8, cy - radius * 1.3, radius * 3.6, radius * 2.6);
+
+      const jawShade = ctx.createLinearGradient(0, cy, 0, cy + radius * 1.24);
+      jawShade.addColorStop(0, "rgba(90,90,90,0)");
+      jawShade.addColorStop(1, "rgba(90,90,90,0.2)");
+      ctx.fillStyle = jawShade;
+      ctx.fillRect(cx - radius * 1.8, cy, radius * 3.6, radius * 1.4);
+
+      ctx.restore();
+
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, radius * 1.56, radius * 1.08, 0, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(86,86,86,0.08)";
+      ctx.lineWidth = Math.max(1, radius * 0.12);
+      ctx.stroke();
+    });
   }
 
   getHeadStripeTex(radius) {
