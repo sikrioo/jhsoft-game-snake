@@ -367,14 +367,14 @@ export class TextureStore {
     const key = `mouth-big-smile:${radius}`;
     if (this.cache.has(key)) return this.cache.get(key);
 
-    const size = radius * 2.9 + 10;
+    const size = radius * 2.5 + 10;
     const center = size / 2;
     const g = new PIXI.Graphics();
     g.beginFill(0xffffff, 1);
-    g.drawEllipse(center + radius * 0.12, center + radius * 0.22, radius * 0.58, radius * 0.4);
+    g.drawEllipse(center, center + radius * 0.16, radius * 0.44, radius * 0.3);
     g.endFill();
     g.beginFill(0xffffff, 0.32);
-    g.drawEllipse(center + radius * 0.08, center + radius * 0.08, radius * 0.26, radius * 0.1);
+    g.drawEllipse(center, center + radius * 0.02, radius * 0.18, radius * 0.07);
     g.endFill();
 
     const texture = this.app.renderer.generateTexture(g, { resolution: 1 });

@@ -83,20 +83,20 @@ function getZombieVariant(snake) {
 function getHeadFeatureLayout(snake) {
   if (snake.skin.pattern === "jelly") {
     return {
-      headScale: 1.06,
-      eyeForward: CFG.SR * 0.48,
-      eyeOffset: CFG.SR * 0.48,
+      headScale: 1.04,
+      eyeForward: CFG.SR * 0.2,
+      eyeOffset: CFG.SR * 0.4,
       pupilForward: CFG.SR * 0.1,
-      eyeScale: 1.02,
+      eyeScale: 0.9,
       pupilScale: 0.8,
       sparkScale: 0.8,
       glossX: -CFG.SR * 0.3,
       glossY: -CFG.SR * 0.34,
       glossScaleX: 1.18,
       glossScaleY: 0.94,
-      mouthX: CFG.SR * 0.9,
-      mouthY: CFG.SR * 0.16,
-      mouthScale: 1.08,
+      mouthX: CFG.SR * 0.3,
+      mouthY: CFG.SR * 0.62,
+      mouthScale: 0.76,
     };
   }
 
