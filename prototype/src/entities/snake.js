@@ -16,6 +16,8 @@ export function enrichSkin(skin) {
   if (enriched.id === "happy_jelly_green") {
     enriched.pattern = "jelly";
     enriched.mood = "smile";
+  } else if (enriched.id === "steak") {
+    enriched.pattern = "steak";
   } else if (enriched.id === "worm") {
     enriched.pattern = "worm";
   } else if (enriched.id === "rainbow") {

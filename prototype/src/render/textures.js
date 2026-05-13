@@ -332,11 +332,14 @@ export class TextureStore {
     const key = `eye-happy-closed:${radius}`;
     if (this.cache.has(key)) return this.cache.get(key);
 
-    const size = radius * 2.5 + 8;
+    const size = radius * 2.8 + 10;
     const center = size / 2;
     const g = new PIXI.Graphics();
-    g.lineStyle(Math.max(2, radius * 0.42), 0xffffff, 1);
-    g.arc(center, center + radius * 0.12, radius * 0.78, Math.PI * 1.12, Math.PI * 1.88);
+    const halfWidth = radius * 0.82;
+    const baseline = center + radius * 0.08;
+    g.lineStyle(Math.max(1.8, radius * 0.34), 0xffffff, 1);
+    g.moveTo(center - halfWidth, baseline);
+    g.quadraticCurveTo(center, center - radius * 0.7, center + halfWidth, baseline);
     g.lineStyle(0);
 
     const texture = this.app.renderer.generateTexture(g, { resolution: 1 });
@@ -366,13 +369,38 @@ export class TextureStore {
     const key = `mouth-big-smile:${radius}`;
     if (this.cache.has(key)) return this.cache.get(key);
 
-    const size = radius * 2.2 + 10;
+    const size = radius * 2.8 + 12;
     const center = size / 2;
     const g = new PIXI.Graphics();
+    const halfWidth = radius * 0.62;
+    const baseline = center - radius * 0.04;
+    g.lineStyle(Math.max(2.2, radius * 0.3), 0xffffff, 1);
+    g.moveTo(center - halfWidth, baseline);
+    g.quadraticCurveTo(center, center + radius * 0.44, center + halfWidth, baseline);
+    g.lineStyle(0);
+
+    const texture = this.app.renderer.generateTexture(g, { resolution: 1 });
+    g.destroy();
+    this.cache.set(key, texture);
+    return texture;
+  }
+
+  getMouthJellyTex(radius) {
+    const key = `mouth-jelly:${radius}`;
+    if (this.cache.has(key)) return this.cache.get(key);
+
+    const size = radius * 2.6 + 12;
+    const center = size / 2;
+    const g = new PIXI.Graphics();
+    const mouthRadius = radius * 0.5;
+    const arcCenterX = center + radius * 0.1;
+    const flatX = center - radius * 0.22;
     g.beginFill(0xffffff, 1);
-    g.moveTo(center - radius * 0.34, center);
-    g.quadraticCurveTo(center, center + radius * 0.28, center + radius * 0.34, center);
-    g.lineTo(center - radius * 0.34, center);
+    g.moveTo(flatX, center - mouthRadius);
+    g.lineTo(arcCenterX, center - mouthRadius);
+    g.arc(arcCenterX, center, mouthRadius, -Math.PI / 2, Math.PI / 2);
+    g.lineTo(flatX, center + mouthRadius);
+    g.lineTo(flatX, center - mouthRadius);
     g.endFill();
 
     const texture = this.app.renderer.generateTexture(g, { resolution: 1 });

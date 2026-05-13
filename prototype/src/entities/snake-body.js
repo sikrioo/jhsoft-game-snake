@@ -83,21 +83,43 @@ function getZombieVariant(snake) {
 function getHeadFeatureLayout(snake) {
   if (snake.skin.pattern === "jelly") {
     return {
-      headScale: 1.04,
-      eyeForward: -CFG.SR * 0.04,
-      eyeOffset: CFG.SR * 0.3,
+      headScale: 1,
+      eyeForward: CFG.SR * 0.44,
+      eyeOffset: CFG.SR * 0.54,
+      pupilForward: CFG.SR * 0.13,
+      eyeScale: 1,
+      pupilScale: 1,
+      sparkScale: 1,
+      glossX: -CFG.SR * 0.26,
+      glossY: -CFG.SR * 0.28,
+      glossScaleX: 1,
+      glossScaleY: 0.82,
+      mouthX: CFG.SR * 1.22,
+      mouthY: 0,
+      mouthScale: 0.92,
+      mouthScaleX: 1.08,
+      mouthScaleY: 0.92,
+      faceUpright: false,
+    };
+  }
+
+  if (snake.skin.pattern === "steak") {
+    return {
+      headScale: 0.98,
+      eyeForward: CFG.SR * 0.38,
+      eyeOffset: CFG.SR * 0.48,
       pupilForward: CFG.SR * 0.1,
-      eyeScale: 0.82,
-      pupilScale: 0.8,
-      sparkScale: 0.8,
-      glossX: -CFG.SR * 0.3,
-      glossY: -CFG.SR * 0.34,
-      glossScaleX: 1.18,
-      glossScaleY: 0.94,
-      mouthX: CFG.SR * 0.26,
-      mouthY: CFG.SR * 0.56,
-      mouthScale: 0.78,
-      faceUpright: true,
+      eyeScale: 1.05,
+      pupilScale: 0.92,
+      sparkScale: 0.72,
+      glossX: -CFG.SR * 0.26,
+      glossY: -CFG.SR * 0.28,
+      glossScaleX: 1,
+      glossScaleY: 0.82,
+      mouthX: CFG.SR * 0.98,
+      mouthY: 0,
+      mouthScale: 1,
+      faceUpright: false,
     };
   }
 
@@ -143,12 +165,12 @@ function getHeadFeatureLayout(snake) {
 function getMotionProfile(snake) {
   if (snake.skin.pattern === "jelly") {
     return {
-      segmentPulseAmp: 0.03,
+      segmentPulseAmp: 0,
       segmentPulseFreq: 0.015,
       segmentPulsePhase: 0.45,
-      headBounceAmp: 0.045,
+      headBounceAmp: 0,
       headBounceFreq: 0.018,
-      headBobAmp: 0.5,
+      headBobAmp: 0,
     };
   }
 
@@ -191,11 +213,23 @@ function getSegmentStyle(snake, bodyIndex, t, buffed, rainbowPhase) {
   }
 
   if (snake.skin.pattern === "jelly") {
-    const bandOffset = [4, 1, -1, 2][bodyIndex % 4];
     return {
-      tint: hslHex(126, snake.isPlayer ? 86 : 72, (snake.isPlayer ? 65 : 57) + bandOffset + t * 3),
-      alpha: snake.isPlayer ? 0.9 + t * 0.05 : 0.84 + t * 0.06,
-      scale: baseScale * 1.02,
+      tint: hslHex(126, snake.isPlayer ? 86 : 72, (snake.isPlayer ? 58 : 52) + t * 4),
+      alpha: snake.isPlayer ? 0.95 + t * 0.02 : 0.9 + t * 0.03,
+      scale: baseScale,
+    };
+  }
+
+  if (snake.skin.pattern === "steak") {
+    const isRed = Math.floor(bodyIndex / 2) % 2 === 0;
+    return {
+      tint: isRed
+        ? hslHex(0, snake.isPlayer ? 78 : 64, snake.isPlayer ? 44 : 36)
+        : hslHex(0, 8, snake.isPlayer ? 88 : 78),
+      alpha: isRed
+        ? 0.82 + t * 0.14
+        : 0.72 + t * 0.18,
+      scale: baseScale,
     };
   }
 
@@ -384,22 +418,40 @@ function getHeadStyle(snake, buffed, now) {
 
   if (snake.skin.pattern === "jelly") {
     return {
-      shadowTint: hslHex(126, 36, 24),
-      shadowAlpha: 0.22,
-      baseTint: hslHex(126, snake.isPlayer ? 88 : 74, snake.isPlayer ? 71 : 63),
-      baseAlpha: 0.99,
-      glossAlpha: 0.24,
+      shadowTint: hslHex(126, 42, 16),
+      shadowAlpha: 0.34,
+      baseTint: hslHex(126, snake.isPlayer ? 86 : 74, snake.isPlayer ? 61 : 55),
+      baseAlpha: 1,
+      glossAlpha: 0.18,
       stripeVisible: false,
       stripeAlpha: 0,
       stripeTint: 0x173819,
       mood: null,
-      eyeMode: "happy_closed",
-      eyeTint: 0x1b1b1b,
-      mouthMode: "none",
+      mouthMode: "jelly_half",
       mouthTint: 0xff91b6,
       auraColor: 0x9affb0,
-      auraIdleAlpha: 0.035,
-      auraBoostAlpha: 0.1,
+      auraIdleAlpha: 0,
+      auraBoostAlpha: 0.08,
+      auraBuffAlpha: 0.07,
+      auraWidth: CFG.SR * 3.2,
+    };
+  }
+
+  if (snake.skin.pattern === "steak") {
+    return {
+      shadowTint: hslHex(0, 18, 14),
+      shadowAlpha: 0.38,
+      baseTint: hslHex(0, 10, snake.isPlayer ? 88 : 78),
+      baseAlpha: 0.98,
+      glossAlpha: snake.isPlayer ? 0.22 : 0.13,
+      stripeVisible: false,
+      stripeAlpha: 0,
+      stripeTint: 0x0f1118,
+      mood: null,
+      mouthMode: "none",
+      auraColor: 0xff4444,
+      auraIdleAlpha: 0,
+      auraBoostAlpha: 0.12,
       auraBuffAlpha: 0.08,
       auraWidth: CFG.SR * 3.4,
     };
@@ -451,6 +503,7 @@ export class SnakeBody {
     this.mouthSmile = null;
     this.mouthAngry = null;
     this.mouthBigSmile = null;
+    this.mouthJelly = null;
     this.nameText = null;
     this.eyeWhiteTex = null;
     this.eyeClosedTex = null;
@@ -472,6 +525,7 @@ export class SnakeBody {
       const mouthSmileTex = this.textures.getMouthSmileTex(CFG.SR);
       const mouthAngryTex = this.textures.getMouthAngryTex(CFG.SR);
       const mouthBigSmileTex = this.textures.getMouthBigSmileTex(CFG.SR);
+      const mouthJellyTex = this.textures.getMouthJellyTex(CFG.SR);
 
       this.eyeWhiteTex = eyeWhiteTex;
       this.eyeClosedTex = eyeClosedTex;
@@ -514,19 +568,24 @@ export class SnakeBody {
       this.mouthSmile = new PIXI.Sprite(mouthSmileTex);
       this.mouthAngry = new PIXI.Sprite(mouthAngryTex);
       this.mouthBigSmile = new PIXI.Sprite(mouthBigSmileTex);
+      this.mouthJelly = new PIXI.Sprite(mouthJellyTex);
       this.mouthSmile.anchor.set(0.5);
       this.mouthAngry.anchor.set(0.5);
       this.mouthBigSmile.anchor.set(0.5);
+      this.mouthJelly.anchor.set(0.5);
       this.mouthSmile.tint = 0x04080f;
       this.mouthAngry.tint = 0x04080f;
       this.mouthBigSmile.tint = 0x4b2a1d;
+      this.mouthJelly.tint = 0xff91b6;
       this.mouthSmile.alpha = 0.82;
       this.mouthAngry.alpha = 0.82;
       this.mouthBigSmile.alpha = 0.94;
+      this.mouthJelly.alpha = 0.95;
       this.mouthSmile.position.set(CFG.SR * 0.98, 0);
       this.mouthAngry.position.set(CFG.SR * 0.98, 0);
       this.mouthBigSmile.position.set(CFG.SR * 0.98, 0);
-      this.headContainer.addChild(this.mouthSmile, this.mouthAngry, this.mouthBigSmile);
+      this.mouthJelly.position.set(CFG.SR * 0.98, 0);
+      this.headContainer.addChild(this.mouthSmile, this.mouthAngry, this.mouthBigSmile, this.mouthJelly);
 
       const eyeForward = CFG.SR * 0.44;
       const eyeOffset = CFG.SR * 0.54;
@@ -587,8 +646,11 @@ export class SnakeBody {
     const mouthMode = style.mouthMode || (style.mood === "angry" ? "angry" : style.mood === "smile" ? "smile" : "none");
     const eyeTint = style.eyeTint ?? 0xffffff;
     const mouthTint = style.mouthTint ?? 0x04080f;
+    const mouthScaleX = featureLayout.mouthScaleX ?? featureLayout.mouthScale ?? 1;
+    const mouthScaleY = featureLayout.mouthScaleY ?? featureLayout.mouthScale ?? 1;
     const headBob = headWave * motion.headBobAmp;
     const faceRotation = featureLayout.faceUpright ? -this.snake.angle : 0;
+    const useClosedEyes = eyeMode === "happy_closed";
 
     this.headContainer.position.set(
       head.x + Math.cos(this.snake.angle) * headBob,
@@ -606,10 +668,10 @@ export class SnakeBody {
     this.headStripes.visible = style.stripeVisible;
     this.headStripes.alpha = style.stripeAlpha;
     this.headStripes.tint = style.stripeTint;
-    this.leftEye.texture = eyeMode === "happy_closed" ? this.eyeClosedTex : this.eyeWhiteTex;
-    this.rightEye.texture = eyeMode === "happy_closed" ? this.eyeClosedTex : this.eyeWhiteTex;
-    this.leftEye.tint = eyeMode === "happy_closed" ? eyeTint : 0xffffff;
-    this.rightEye.tint = eyeMode === "happy_closed" ? eyeTint : 0xffffff;
+    this.leftEye.texture = useClosedEyes ? this.eyeClosedTex : this.eyeWhiteTex;
+    this.rightEye.texture = useClosedEyes ? this.eyeClosedTex : this.eyeWhiteTex;
+    this.leftEye.tint = useClosedEyes ? eyeTint : 0xffffff;
+    this.rightEye.tint = useClosedEyes ? eyeTint : 0xffffff;
     this.leftEye.position.set(featureLayout.eyeForward, -featureLayout.eyeOffset);
     this.rightEye.position.set(featureLayout.eyeForward, featureLayout.eyeOffset);
     this.leftEye.rotation = faceRotation;
@@ -628,25 +690,30 @@ export class SnakeBody {
     this.rightPupil.scale.set(featureLayout.pupilScale);
     this.leftEyeSpark.scale.set(featureLayout.sparkScale);
     this.rightEyeSpark.scale.set(featureLayout.sparkScale);
-    this.leftPupil.visible = eyeMode !== "happy_closed";
-    this.rightPupil.visible = eyeMode !== "happy_closed";
-    this.leftEyeSpark.visible = eyeMode !== "happy_closed";
-    this.rightEyeSpark.visible = eyeMode !== "happy_closed";
+    this.leftPupil.visible = !useClosedEyes;
+    this.rightPupil.visible = !useClosedEyes;
+    this.leftEyeSpark.visible = !useClosedEyes;
+    this.rightEyeSpark.visible = !useClosedEyes;
     this.mouthSmile.position.set(featureLayout.mouthX, featureLayout.mouthY);
     this.mouthAngry.position.set(featureLayout.mouthX, featureLayout.mouthY);
     this.mouthBigSmile.position.set(featureLayout.mouthX, featureLayout.mouthY);
+    this.mouthJelly.position.set(featureLayout.mouthX, featureLayout.mouthY);
     this.mouthSmile.rotation = faceRotation;
     this.mouthAngry.rotation = faceRotation;
     this.mouthBigSmile.rotation = faceRotation;
-    this.mouthSmile.scale.set(featureLayout.mouthScale);
-    this.mouthAngry.scale.set(featureLayout.mouthScale);
-    this.mouthBigSmile.scale.set(featureLayout.mouthScale);
+    this.mouthJelly.rotation = faceRotation;
+    this.mouthSmile.scale.set(mouthScaleX, mouthScaleY);
+    this.mouthAngry.scale.set(mouthScaleX, mouthScaleY);
+    this.mouthBigSmile.scale.set(mouthScaleX, mouthScaleY);
+    this.mouthJelly.scale.set(mouthScaleX, mouthScaleY);
     this.mouthSmile.tint = mouthTint;
     this.mouthAngry.tint = mouthTint;
     this.mouthBigSmile.tint = mouthTint;
+    this.mouthJelly.tint = mouthTint;
     this.mouthSmile.visible = mouthMode === "smile";
     this.mouthAngry.visible = mouthMode === "angry";
     this.mouthBigSmile.visible = mouthMode === "big_smile";
+    this.mouthJelly.visible = mouthMode === "jelly_half";
 
     if (this.snake.boosting || buffed || style.auraIdleAlpha > 0) {
       const auraColor = buffed ? 0xffd060 : style.auraColor;
